@@ -233,116 +233,7 @@
         }
         
         .hidden {
-            display: none;
-        }
-
-        /* Modal Styles */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 15px;
-        }
-
-        .modal-header h3 {
-            color: #2d3748;
-            margin: 0;
-        }
-
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #718096;
-            width: auto;
-            padding: 5px;
-        }
-
-        .close-modal:hover {
-            color: #2d3748;
-        }
-
-        .cost-item {
-            display: grid;
-            grid-template-columns: 2fr 1fr auto;
-            gap: 10px;
-            margin-bottom: 10px;
-            align-items: end;
-        }
-
-        .cost-total {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border-left: 4px solid #667eea;
-        }
-
-        .cost-total h4 {
-            margin: 0;
-            color: #2d3748;
-            font-size: 18px;
-        }
-
-        .remove-cost-btn {
-            background: #e53e3e;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            width: auto;
-        }
-
-        .add-cost-btn {
-            background: #38a169;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-bottom: 15px;
-            width: auto;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 20px;
-        }
-
-        .modal-actions button {
-            width: auto;
-            padding: 10px 20px;
+            display: none !important;
         }
     </style>
 </head>
@@ -385,9 +276,13 @@
                 <h2>📊 Books Still Paying Off <span class="status-badge in-progress">TRACKING</span></h2>
                 
                 <div class="input-group">
-                    <div style="grid-column: span 2;">
+                    <div>
                         <label for="bookTitle">Book Title</label>
                         <input type="text" id="bookTitle" placeholder="Enter book title">
+                    </div>
+                    <div>
+                        <label for="devCost">Development Cost ($)</label>
+                        <input type="number" id="devCost" placeholder="0.00" step="0.01">
                     </div>
                     <div>
                         <label for="launchDate">Release Date</label>
@@ -395,12 +290,8 @@
                     </div>
                     <div>
                         <label style="opacity: 0;">Action</label>
-                        <button onclick="showAddCostsModal()" id="addBookBtn">Add Book</button>
+                        <button onclick="addBook()" id="addBookBtn">Add Book</button>
                     </div>
-                </div>
-                
-                <div class="formula-explanation">
-                    <strong>How it works:</strong> Click "Add Book" to enter itemized development costs (editing, cover, formatting, etc.). The system automatically calculates total development cost and tracks when your book pays off.
                 </div>
                 
                 <div id="loadingActive" class="loading">Loading your books...</div>
@@ -408,7 +299,7 @@
                     <thead>
                         <tr>
                             <th>Book Title</th>
-                            <th>Total Dev Cost</th>
+                            <th>Dev Cost</th>
                             <th>Release Date</th>
                             <th>Cumulative Profit</th>
                             <th>Status</th>
@@ -421,7 +312,9 @@
                 </table>
                 
                 <div class="formula-explanation">
-                    <strong>☁️ Cloud Sync:</strong> Your data is automatically saved to your Google account and synced across all devices!
+                    <strong>How it works:</strong> Add quarterly profit updates until cumulative profit ≥ development cost. 
+                    The system calculates estimated payoff timeline based on your average quarterly performance.
+                    <br><strong>☁️ Cloud Sync:</strong> Your data is automatically saved to your Google account and synced across all devices!
                 </div>
             </div>
             
@@ -433,7 +326,7 @@
                     <thead>
                         <tr>
                             <th>Book Title</th>
-                            <th>Total Dev Cost</th>
+                            <th>Dev Cost</th>
                             <th>Months to Payoff</th>
                             <th>Final Profit at Payoff</th>
                             <th>Release Date</th>
@@ -495,51 +388,13 @@
                 </div>
             </div>
         </div>
-
-        <!-- Add/Edit Book Modal -->
-        <div id="bookModal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 id="modalTitle">Add New Book</h3>
-                    <button class="close-modal" onclick="closeBookModal()">&times;</button>
-                </div>
-                
-                <div style="margin-bottom: 20px;">
-                    <label for="modalBookTitle">Book Title</label>
-                    <input type="text" id="modalBookTitle" placeholder="Enter book title">
-                </div>
-                
-                <div style="margin-bottom: 20px;">
-                    <label for="modalLaunchDate">Release Date</label>
-                    <input type="date" id="modalLaunchDate">
-                </div>
-                
-                <div>
-                    <label>Development Costs</label>
-                    <button class="add-cost-btn" onclick="addCostItem()">+ Add Cost Item</button>
-                    
-                    <div id="costItems">
-                        <!-- Cost items will be added here dynamically -->
-                    </div>
-                    
-                    <div class="cost-total">
-                        <h4>Total Development Cost: $<span id="totalCost">0.00</span></h4>
-                    </div>
-                </div>
-                
-                <div class="modal-actions">
-                    <button onclick="closeBookModal()" style="background: #718096;">Cancel</button>
-                    <button onclick="saveBook()" id="saveBookBtn">Save Book</button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, doc, setDoc, collection, getDocs, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         // Firebase configuration
         const firebaseConfig = {
@@ -561,19 +416,11 @@
         let currentUser = null;
         let books = [];
         let paidOffBooks = [];
-        let currentEditingBook = null;
-        let costItemCounter = 0;
 
         // Make functions globally available
         window.signInWithGoogle = signInWithGoogle;
         window.signOut = signOut;
-        window.showAddCostsModal = showAddCostsModal;
-        window.closeBookModal = closeBookModal;
-        window.addCostItem = addCostItem;
-        window.removeCostItem = removeCostItem;
-        window.updateTotalCost = updateTotalCost;
-        window.saveBook = saveBook;
-        window.editBook = editBook;
+        window.addBook = addBook;
         window.updateQuarterlyProfit = updateQuarterlyProfit;
         window.deleteBook = deleteBook;
         window.exportData = exportData;
@@ -674,192 +521,47 @@
             }
         }
 
-        // Modal functions
-        function showAddCostsModal() {
+        // App functions
+        async function addBook() {
             if (!currentUser) {
                 alert('Please sign in first');
                 return;
             }
 
             const title = document.getElementById('bookTitle').value;
+            const devCost = parseFloat(document.getElementById('devCost').value);
             const launchDate = document.getElementById('launchDate').value;
 
-            if (!title || !launchDate) {
-                alert('Please fill in book title and release date first');
+            if (!title || !devCost || !launchDate) {
+                alert('Please fill in all fields');
                 return;
             }
 
-            currentEditingBook = null;
-            document.getElementById('modalTitle').textContent = 'Add New Book';
-            document.getElementById('modalBookTitle').value = title;
-            document.getElementById('modalLaunchDate').value = launchDate;
-            document.getElementById('saveBookBtn').textContent = 'Save Book';
-            
-            // Clear cost items
-            document.getElementById('costItems').innerHTML = '';
-            costItemCounter = 0;
-            
-            // Add initial cost item
-            addCostItem();
-            
-            document.getElementById('bookModal').classList.remove('hidden');
-        }
-
-        function editBook(bookId) {
-            if (!currentUser) return;
-
-            const book = books.find(b => b.id === bookId);
-            if (!book) return;
-
-            currentEditingBook = book;
-            document.getElementById('modalTitle').textContent = 'Edit Book';
-            document.getElementById('modalBookTitle').value = book.title;
-            document.getElementById('modalLaunchDate').value = book.launchDate;
-            document.getElementById('saveBookBtn').textContent = 'Update Book';
-            
-            // Clear and populate cost items
-            document.getElementById('costItems').innerHTML = '';
-            costItemCounter = 0;
-            
-            if (book.developmentCosts && book.developmentCosts.length > 0) {
-                book.developmentCosts.forEach(cost => {
-                    addCostItem(cost.description, cost.amount);
-                });
-            } else {
-                // Legacy book with single devCost
-                addCostItem('Development Cost', book.devCost || 0);
-            }
-            
-            document.getElementById('bookModal').classList.remove('hidden');
-        }
-
-        function closeBookModal() {
-            document.getElementById('bookModal').classList.add('hidden');
-            currentEditingBook = null;
-        }
-
-        function addCostItem(description = '', amount = '') {
-            costItemCounter++;
-            const costItems = document.getElementById('costItems');
-            
-            const costItem = document.createElement('div');
-            costItem.className = 'cost-item';
-            costItem.setAttribute('data-id', costItemCounter);
-            
-            costItem.innerHTML = `
-                <div>
-                    <input type="text" placeholder="Cost description (e.g., Editing, Cover Design)" 
-                           value="${description}" onchange="updateTotalCost()">
-                </div>
-                <div>
-                    <input type="number" placeholder="0.00" step="0.01" 
-                           value="${amount}" onchange="updateTotalCost()">
-                </div>
-                <div>
-                    <button class="remove-cost-btn" onclick="removeCostItem(${costItemCounter})">Remove</button>
-                </div>
-            `;
-            
-            costItems.appendChild(costItem);
-            updateTotalCost();
-        }
-
-        function removeCostItem(id) {
-            const item = document.querySelector(`[data-id="${id}"]`);
-            if (item) {
-                item.remove();
-                updateTotalCost();
-            }
-        }
-
-        function updateTotalCost() {
-            const costItems = document.querySelectorAll('.cost-item input[type="number"]');
-            let total = 0;
-            
-            costItems.forEach(input => {
-                const amount = parseFloat(input.value) || 0;
-                total += amount;
-            });
-            
-            document.getElementById('totalCost').textContent = total.toFixed(2);
-        }
-
-        async function saveBook() {
-            if (!currentUser) {
-                alert('Please sign in first');
-                return;
-            }
-
-            const title = document.getElementById('modalBookTitle').value;
-            const launchDate = document.getElementById('modalLaunchDate').value;
-            
-            // Collect cost items
-            const costItems = document.querySelectorAll('.cost-item');
-            const developmentCosts = [];
-            let totalCost = 0;
-            
-            costItems.forEach(item => {
-                const description = item.querySelector('input[type="text"]').value;
-                const amount = parseFloat(item.querySelector('input[type="number"]').value) || 0;
-                
-                if (description && amount > 0) {
-                    developmentCosts.push({ description, amount });
-                    totalCost += amount;
-                }
-            });
-
-            if (!title || !launchDate || developmentCosts.length === 0) {
-                alert('Please fill in all required fields and add at least one cost item');
-                return;
-            }
-
-            const saveBtn = document.getElementById('saveBookBtn');
-            saveBtn.disabled = true;
-            saveBtn.textContent = currentEditingBook ? 'Updating...' : 'Saving...';
+            const addBookBtn = document.getElementById('addBookBtn');
+            addBookBtn.disabled = true;
+            addBookBtn.textContent = 'Adding...';
 
             try {
-                if (currentEditingBook) {
-                    // Update existing book
-                    const bookIndex = books.findIndex(b => b.id === currentEditingBook.id);
-                    if (bookIndex !== -1) {
-                        books[bookIndex] = {
-                            ...books[bookIndex],
-                            title,
-                            launchDate,
-                            developmentCosts,
-                            devCost: totalCost, // Keep for backward compatibility
-                            updatedAt: new Date().toISOString()
-                        };
-                        
-                        await saveBookToFirebase(books[bookIndex]);
-                        alert('Book updated successfully!');
-                    }
-                } else {
-                    // Create new book
-                    const newBook = {
-                        id: Date.now(),
-                        title,
-                        launchDate,
-                        developmentCosts,
-                        devCost: totalCost, // Keep for backward compatibility
-                        quarterlyUpdates: [],
-                        cumulativeProfit: 0,
-                        createdAt: new Date().toISOString()
-                    };
+                const newBook = {
+                    id: Date.now(),
+                    title,
+                    devCost,
+                    launchDate,
+                    quarterlyUpdates: [],
+                    cumulativeProfit: 0,
+                    createdAt: new Date().toISOString()
+                };
 
-                    await saveBookToFirebase(newBook);
-                    books.push(newBook);
-                    alert('Book added successfully!');
-                }
-                
+                await saveBookToFirebase(newBook);
+                books.push(newBook);
                 clearInputs();
                 renderTables();
-                closeBookModal();
+                alert('Book added successfully!');
             } catch (error) {
-                alert('Failed to save book. Please try again.');
+                alert('Failed to add book. Please try again.');
             } finally {
-                saveBtn.disabled = false;
-                saveBtn.textContent = currentEditingBook ? 'Update Book' : 'Save Book';
+                addBookBtn.disabled = false;
+                addBookBtn.textContent = 'Add Book';
             }
         }
 
@@ -944,6 +646,7 @@
 
         function clearInputs() {
             document.getElementById('bookTitle').value = '';
+            document.getElementById('devCost').value = '';
             document.getElementById('launchDate').value = '';
         }
 
@@ -986,22 +689,13 @@
                 const profitClass = book.cumulativeProfit >= 0 ? 'profit-positive' : 'profit-negative';
 
                 row.innerHTML = `
-                    <td>
-                        <strong>${book.title}</strong>
-                        ${book.developmentCosts ? '<br><small style="color: #718096;">Itemized costs</small>' : ''}
-                    </td>
-                    <td>
-                        $${(book.devCost || 0).toFixed(2)}
-                        ${book.developmentCosts ? `<br><small style="color: #718096;">${book.developmentCosts.length} items</small>` : ''}
-                    </td>
+                    <td><strong>${book.title}</strong></td>
+                    <td>$${book.devCost.toFixed(2)}</td>
                     <td>${new Date(book.launchDate).toLocaleDateString()}</td>
                     <td class="${profitClass}">$${book.cumulativeProfit.toFixed(2)}</td>
                     <td>${status}</td>
                     <td class="estimated-timeline">${estimatePayoffQuarters(book)}</td>
-                    <td>
-                        <button onclick="editBook(${book.id})" style="background: #3182ce; font-size: 12px; padding: 5px 10px; width: auto; margin-right: 5px;">Edit</button>
-                        <button onclick="deleteBook(${book.id})" style="background: #e53e3e; font-size: 12px; padding: 5px 10px; width: auto;">Delete</button>
-                    </td>
+                    <td><button onclick="deleteBook(${book.id})" style="background: #e53e3e; font-size: 12px; padding: 5px 10px; width: auto;">Delete</button></td>
                 `;
                 activeTableBody.appendChild(row);
             });
@@ -1013,14 +707,8 @@
             paidOffBooks.forEach(book => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>
-                        <strong>${book.title}</strong>
-                        ${book.developmentCosts ? '<br><small style="color: #718096;">Itemized costs</small>' : ''}
-                    </td>
-                    <td>
-                        $${(book.devCost || 0).toFixed(2)}
-                        ${book.developmentCosts ? `<br><small style="color: #718096;">${book.developmentCosts.length} items</small>` : ''}
-                    </td>
+                    <td><strong>${book.title}</strong></td>
+                    <td>$${book.devCost.toFixed(2)}</td>
                     <td>${book.monthsToPayoff} months</td>
                     <td class="profit-positive">$${book.finalProfit.toFixed(2)}</td>
                     <td>${new Date(book.launchDate).toLocaleDateString()}</td>
@@ -1040,7 +728,7 @@
             });
         }
 
-        // Export/Import functions (still available as backup)
+        // Export/Import functions
         function exportData() {
             const dataToExport = {
                 books: books,
