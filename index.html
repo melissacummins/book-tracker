@@ -707,10 +707,16 @@
             paidOffBooks.forEach(book => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td><strong>${book.title}</strong></td>
-                    <td>$${book.devCost.toFixed(2)}</td>
+                    <td>
+                        <strong>${book.title}</strong>
+                        ${book.developmentCosts ? '<br><small style="color: #718096;">Itemized costs</small>' : ''}
+                    </td>
+                    <td>
+                        ${(book.devCost || 0).toFixed(2)}
+                        ${book.developmentCosts ? `<br><small style="color: #718096;">${book.developmentCosts.length} items</small>` : ''}
+                    </td>
                     <td>${book.monthsToPayoff} months</td>
-                    <td class="profit-positive">$${book.finalProfit.toFixed(2)}</td>
+                    <td class="profit-positive">${book.finalProfit.toFixed(2)}</td>
                     <td>${new Date(book.launchDate).toLocaleDateString()}</td>
                     <td>${new Date(book.payoffDate).toLocaleDateString()}</td>
                 `;
