@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Development Cost Tracker</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .section h2 {
+            color: #4a5568;
+            margin-top: 0;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .paid-off {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .in-progress {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .online {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        th {
+            background: #4a5568;
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #f7fafc;
+        }
+        
+        .input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        input, select {
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #5a67d8;
+        }
+        
+        button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+        
+        .formula-explanation {
+            background: #ebf8ff;
+            border: 1px solid #bee3f8;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #2c5282;
+        }
+        
+        .profit-positive {
+            color: #22543d;
+            font-weight: bold;
+        }
+        
+        .profit-negative {
+            color: #742a2a;
+            font-weight: bold;
+        }
+        
+        .estimated-timeline {
+            color: #553c9a;
+            font-style: italic;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #4a5568;
+            font-style: italic;
+        }
+        
+        .error {
+            background: #fed7d7;
+            border: 1px solid #fc8181;
+            color: #742a2a;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 Book Development Cost Tracker <span class="status-badge online">🌐 ONLINE</span></h1>
+        
+        <div class="section">
+            <h2>📊 Books Still Paying Off <span class="status-badge in-progress">TRACKING</span></h2>
+            
+            <div class="input-group">
+                <input type="text" id="bookTitle" placeholder="Book Title">
+                <input type="number" id="devCost" placeholder="Development Cost ($)" step="0.01">
+                <input type="date" id="launchDate" placeholder="Launch Date">
+                <button onclick="addBook()" id="addBookBtn">Add Book</button>
+            </div>
+            
+            <div id="activeTableLoading" class="loading">Loading books...</div>
+            <table id="activeTracking" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Book Title</th>
+                        <th>Dev Cost</th>
+                        <th>Launch Date</th>
+                        <th>Cumulative Profit</th>
+                        <th>Status</th>
+                        <th>Est. Payoff</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="activeTableBody">
+                </tbody>
+            </table>
+            
+            <div class="formula-explanation">
+                <strong>How it works:</strong> Add quarterly profit updates until cumulative profit ≥ development cost. 
+                The system calculates estimated payoff timeline based on your average quarterly performance.
+                <br><strong>🌐 Online Database:</strong> Your data is now saved online and syncs across all devices!
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>✅ Paid Off Books <span class="status-badge paid-off">COMPLETE</span></h2>
+            
+            <div id="paidOffTableLoading" class="loading">Loading paid off books...</div>
+            <table id="paidOffBooks" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Book Title</th>
+                        <th>Dev Cost</th>
+                        <th>Months to Payoff</th>
+                        <th>Final Profit at Payoff</th>
+                        <th>Launch Date</th>
+                        <th>Payoff Date</th>
+                    </tr>
+                </thead>
+                <tbody id="paidOffTableBody">
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="section">
+            <h2>🔄 Quarterly Profit Updates</h2>
+            
+            <div class="input-group">
+                <select id="updateBookSelect">
+                    <option value="">Select Book to Update</option>
+                </select>
+                <input type="number" id="quarterlyProfit" placeholder="Quarterly Profit ($)" step="0.01">
+                <input type="text" id="quarterYear" placeholder="Q1 2025" pattern="Q[1-4] \d{4}">
+                <button onclick="updateQuarterlyProfit()" id="updateBtn">Add Quarterly Update</button>
+            </div>
+            
+            <div class="formula-explanation">
+                <strong>Tip:</strong> Once a book is paid off, it automatically moves to the "Paid Off" section and you stop tracking it!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let books = [];
+        let paidOffBooks = [];
+
+        // API functions
+        async function fetchBooks() {
+            try {
+                const response = await fetch('/.netlify/functions/get-books');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    books = data.activeBooks || [];
+                    paidOffBooks = data.paidOffBooks || [];
+                    renderTables();
+                } else {
+                    showError('Failed to load books: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error fetching books:', error);
+                showError('Failed to connect to database. Please check your internet connection.');
+            }
+        }
+
+        async function addBook() {
+            const title = document.getElementById('bookTitle').value;
+            const devCost = parseFloat(document.getElementById('devCost').value);
+            const launchDate = document.getElementById('launchDate').value;
+
+            if (!title || !devCost || !launchDate) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const addBookBtn = document.getElementById('addBookBtn');
+            addBookBtn.disabled = true;
+            addBookBtn.textContent = 'Adding...';
+
+            try {
+                const response = await fetch('/.netlify/functions/add-book', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        title,
+                        devCost,
+                        launchDate
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    clearInputs();
+                    await fetchBooks(); // Refresh the data
+                    alert('Book added successfully!');
+                } else {
+                    showError('Failed to add book: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error adding book:', error);
+                showError('Failed to add book. Please try again.');
+            } finally {
+                addBookBtn.disabled = false;
+                addBookBtn.textContent = 'Add Book';
+            }
+        }
+
+        async function updateQuarterlyProfit() {
+            const bookId = parseInt(document.getElementById('updateBookSelect').value);
+            const profit = parseFloat(document.getElementById('quarterlyProfit').value);
+            const quarter = document.getElementById('quarterYear').value;
+
+            if (!bookId || isNaN(profit) || !quarter) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const updateBtn = document.getElementById('updateBtn');
+            updateBtn.disabled = true;
+            updateBtn.textContent = 'Updating...';
+
+            try {
+                const response = await fetch('/.netlify/functions/update-book', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bookId,
+                        profit,
+                        quarter
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Check if book is paid off
+                    if (data.isPaidOff) {
+                        // Move to paid off
+                        await fetch('/.netlify/functions/move-to-paid-off', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ bookId })
+                        });
+                        
+                        alert(`🎉 "${data.book.title}" is now paid off!`);
+                    }
+
+                    // Clear inputs and refresh
+                    document.getElementById('updateBookSelect').value = '';
+                    document.getElementById('quarterlyProfit').value = '';
+                    document.getElementById('quarterYear').value = '';
+                    
+                    await fetchBooks(); // Refresh the data
+                } else {
+                    showError('Failed to update book: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error updating book:', error);
+                showError('Failed to update book. Please try again.');
+            } finally {
+                updateBtn.disabled = false;
+                updateBtn.textContent = 'Add Quarterly Update';
+            }
+        }
+
+        function clearInputs() {
+            document.getElementById('bookTitle').value = '';
+            document.getElementById('devCost').value = '';
+            document.getElementById('launchDate').value = '';
+        }
+
+        function calculateMonthsToPayoff(book) {
+            const launchDate = new Date(book.launch_date);
+            const payoffDate = new Date();
+            const diffInMonths = (payoffDate.getFullYear() - launchDate.getFullYear()) * 12 + 
+                               (payoffDate.getMonth() - launchDate.getMonth());
+            return diffInMonths;
+        }
+
+        function estimatePayoffQuarters(book) {
+            if (book.cumulative_profit <= 0) return "Need profitable data";
+            
+            // Estimate based on current progress
+            const monthsSinceLaunch = calculateMonthsToPayoff(book);
+            const avgMonthlyProfit = book.cumulative_profit / Math.max(monthsSinceLaunch, 1);
+            const remaining = book.dev_cost - book.cumulative_profit;
+            
+            if (remaining <= 0) return "Paid off!";
+            if (avgMonthlyProfit <= 0) return "No profit yet";
+            
+            const monthsRemaining = Math.ceil(remaining / avgMonthlyProfit);
+            const quartersRemaining = Math.ceil(monthsRemaining / 3);
+            return `~${quartersRemaining} quarters`;
+        }
+
+        function showError(message) {
+            // Remove existing error messages
+            const existingErrors = document.querySelectorAll('.error');
+            existingErrors.forEach(error => error.remove());
+            
+            // Create new error message
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            
+            // Insert at the top of the container
+            const container = document.querySelector('.container');
+            container.insertBefore(errorDiv, container.firstChild);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+
+        function renderTables() {
+            // Hide loading messages and show tables
+            document.getElementById('activeTableLoading').style.display = 'none';
+            document.getElementById('paidOffTableLoading').style.display = 'none';
+            document.getElementById('activeTracking').style.display = 'table';
+            document.getElementById('paidOffBooks').style.display = 'table';
+
+            // Render active tracking table
+            const activeTableBody = document.getElementById('activeTableBody');
+            activeTableBody.innerHTML = '';
+
+            books.forEach(book => {
+                const row = document.createElement('tr');
+                const remaining = parseFloat(book.dev_cost) - parseFloat(book.cumulative_profit);
+                const status = remaining <= 0 ? 'Paid Off!' : `$${remaining.toFixed(2)} remaining`;
+                const profitClass = book.cumulative_profit >= 0 ? 'profit-positive' : 'profit-negative';
+
+                row.innerHTML = `
+                    <td><strong>${book.title}</strong></td>
+                    <td>$${parseFloat(book.dev_cost).toFixed(2)}</td>
+                    <td>${new Date(book.launch_date).toLocaleDateString()}</td>
+                    <td class="${profitClass}">$${parseFloat(book.cumulative_profit).toFixed(2)}</td>
+                    <td>${status}</td>
+                    <td class="estimated-timeline">${estimatePayoffQuarters(book)}</td>
+                    <td><button onclick="deleteBook(${book.id})" style="background: #e53e3e; font-size: 12px; padding: 5px 10px;">Delete</button></td>
+                `;
+                activeTableBody.appendChild(row);
+            });
+
+            // Render paid off books table
+            const paidOffTableBody = document.getElementById('paidOffTableBody');
+            paidOffTableBody.innerHTML = '';
+
+            paidOffBooks.forEach(book => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${book.title}</strong></td>
+                    <td>$${parseFloat(book.dev_cost).toFixed(2)}</td>
+                    <td>${book.months_to_payoff} months</td>
+                    <td class="profit-positive">$${parseFloat(book.final_profit).toFixed(2)}</td>
+                    <td>${new Date(book.launch_date).toLocaleDateString()}</td>
+                    <td>${new Date(book.payoff_date).toLocaleDateString()}</td>
+                `;
+                paidOffTableBody.appendChild(row);
+            });
+
+            // Update book select dropdown
+            const updateBookSelect = document.getElementById('updateBookSelect');
+            updateBookSelect.innerHTML = '<option value="">Select Book to Update</option>';
+            books.forEach(book => {
+                const option = document.createElement('option');
+                option.value = book.id;
+                option.textContent = book.title;
+                updateBookSelect.appendChild(option);
+            });
+        }
+
+        function deleteBook(bookId) {
+            // This would need another function - for now just alert
+            alert('Delete functionality coming soon! For now, you can set the book to paid off by adding enough profit updates.');
+        }
+
+        // Initialize the app
+        fetchBooks();
+    </script>
+</body>
+</html>
