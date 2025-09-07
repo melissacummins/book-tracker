@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Development Cost Tracker</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .section h2 {
+            color: #4a5568;
+            margin-top: 0;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .paid-off {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .in-progress {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .github-pages {
+            background: #e6fffa;
+            color: #234e52;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        th {
+            background: #4a5568;
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #f7fafc;
+        }
+        
+        .input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        input, select {
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #5a67d8;
+        }
+        
+        .formula-explanation {
+            background: #ebf8ff;
+            border: 1px solid #bee3f8;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #2c5282;
+        }
+        
+        .profit-positive {
+            color: #22543d;
+            font-weight: bold;
+        }
+        
+        .profit-negative {
+            color: #742a2a;
+            font-weight: bold;
+        }
+        
+        .estimated-timeline {
+            color: #553c9a;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 Book Development Cost Tracker <span class="status-badge github-pages">📄 GitHub Pages</span></h1>
+        
+        <div class="section">
+            <h2>📊 Books Still Paying Off <span class="status-badge in-progress">TRACKING</span></h2>
+            
+            <div class="input-group">
+                <input type="text" id="bookTitle" placeholder="Book Title">
+                <input type="number" id="devCost" placeholder="Development Cost ($)" step="0.01">
+                <input type="date" id="launchDate" placeholder="Launch Date">
+                <button onclick="addBook()">Add Book</button>
+            </div>
+            
+            <table id="activeTracking">
+                <thead>
+                    <tr>
+                        <th>Book Title</th>
+                        <th>Dev Cost</th>
+                        <th>Launch Date</th>
+                        <th>Cumulative Profit</th>
+                        <th>Status</th>
+                        <th>Est. Payoff</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="activeTableBody">
+                </tbody>
+            </table>
+            
+            <div class="formula-explanation">
+                <strong>How it works:</strong> Add quarterly profit updates until cumulative profit ≥ development cost. 
+                The system calculates estimated payoff timeline based on your average quarterly performance.
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>✅ Paid Off Books <span class="status-badge paid-off">COMPLETE</span></h2>
+            
+            <table id="paidOffBooks">
+                <thead>
+                    <tr>
+                        <th>Book Title</th>
+                        <th>Dev Cost</th>
+                        <th>Months to Payoff</th>
+                        <th>Final Profit at Payoff</th>
+                        <th>Launch Date</th>
+                        <th>Payoff Date</th>
+                    </tr>
+                </thead>
+                <tbody id="paidOffTableBody">
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="section">
+            <h2>🔄 Quarterly Profit Updates</h2>
+            
+            <div class="input-group">
+                <select id="updateBookSelect">
+                    <option value="">Select Book to Update</option>
+                </select>
+                <input type="number" id="quarterlyProfit" placeholder="Quarterly Profit ($)" step="0.01">
+                <input type="text" id="quarterYear" placeholder="Q1 2025" pattern="Q[1-4] \d{4}">
+                <button onclick="updateQuarterlyProfit()">Add Quarterly Update</button>
+            </div>
+            
+            <div class="formula-explanation">
+                <strong>Tip:</strong> Once a book is paid off, it automatically moves to the "Paid Off" section and you stop tracking it!
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>💾 Data Backup & Transfer</h2>
+            
+            <div class="input-group">
+                <button onclick="exportData()" style="background: #38a169;">📥 Export Data</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+                <button onclick="document.getElementById('importFile').click()" style="background: #3182ce;">📤 Import Data</button>
+                <button onclick="clearAllData()" style="background: #e53e3e;">🗑️ Clear All Data</button>
+            </div>
+            
+            <div class="formula-explanation">
+                <strong>Backup your data:</strong> Export creates a JSON file you can save anywhere. Import lets you restore data on any browser/computer. 
+                Perfect for syncing between devices!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let books = JSON.parse(localStorage.getItem('bookTracker')) || [];
+        let paidOffBooks = JSON.parse(localStorage.getItem('paidOffBooks')) || [];
+
+        function saveData() {
+            localStorage.setItem('bookTracker', JSON.stringify(books));
+            localStorage.setItem('paidOffBooks', JSON.stringify(paidOffBooks));
+        }
+
+        function addBook() {
+            const title = document.getElementById('bookTitle').value;
+            const devCost = parseFloat(document.getElementById('devCost').value);
+            const launchDate = document.getElementById('launchDate').value;
+
+            if (!title || !devCost || !launchDate) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const newBook = {
+                id: Date.now(),
+                title,
+                devCost,
+                launchDate,
+                quarterlyUpdates: [],
+                cumulativeProfit: 0
+            };
+
+            books.push(newBook);
+            saveData();
+            renderTables();
+            clearInputs();
+        }
+
+        function clearInputs() {
+            document.getElementById('bookTitle').value = '';
+            document.getElementById('devCost').value = '';
+            document.getElementById('launchDate').value = '';
+        }
+
+        function updateQuarterlyProfit() {
+            const bookId = parseInt(document.getElementById('updateBookSelect').value);
+            const profit = parseFloat(document.getElementById('quarterlyProfit').value);
+            const quarter = document.getElementById('quarterYear').value;
+
+            if (!bookId || isNaN(profit) || !quarter) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const bookIndex = books.findIndex(book => book.id === bookId);
+            if (bookIndex === -1) return;
+
+            books[bookIndex].quarterlyUpdates.push({
+                quarter,
+                profit,
+                date: new Date().toISOString()
+            });
+
+            books[bookIndex].cumulativeProfit += profit;
+
+            // Check if book is now paid off
+            if (books[bookIndex].cumulativeProfit >= books[bookIndex].devCost) {
+                const paidOffBook = {
+                    ...books[bookIndex],
+                    payoffDate: new Date().toISOString(),
+                    monthsToPayoff: calculateMonthsToPayoff(books[bookIndex]),
+                    finalProfit: books[bookIndex].cumulativeProfit
+                };
+                
+                paidOffBooks.push(paidOffBook);
+                books.splice(bookIndex, 1);
+                
+                alert(`🎉 "${paidOffBook.title}" is now paid off!`);
+            }
+
+            saveData();
+            renderTables();
+            
+            // Clear update inputs
+            document.getElementById('updateBookSelect').value = '';
+            document.getElementById('quarterlyProfit').value = '';
+            document.getElementById('quarterYear').value = '';
+        }
+
+        function calculateMonthsToPayoff(book) {
+            const launchDate = new Date(book.launchDate);
+            const payoffDate = new Date();
+            const diffInMonths = (payoffDate.getFullYear() - launchDate.getFullYear()) * 12 + 
+                               (payoffDate.getMonth() - launchDate.getMonth());
+            return diffInMonths;
+        }
+
+        function estimatePayoffQuarters(book) {
+            if (book.quarterlyUpdates.length === 0) return "Need data";
+            
+            const avgQuarterlyProfit = book.cumulativeProfit / book.quarterlyUpdates.length;
+            const remaining = book.devCost - book.cumulativeProfit;
+            
+            if (remaining <= 0) return "Paid off!";
+            if (avgQuarterlyProfit <= 0) return "No profit yet";
+            
+            const quartersRemaining = Math.ceil(remaining / avgQuarterlyProfit);
+            return `~${quartersRemaining} quarters`;
+        }
+
+        function deleteBook(bookId) {
+            if (confirm('Are you sure you want to delete this book?')) {
+                books = books.filter(book => book.id !== bookId);
+                saveData();
+                renderTables();
+            }
+        }
+
+        function exportData() {
+            const dataToExport = {
+                books: books,
+                paidOffBooks: paidOffBooks,
+                exportDate: new Date().toISOString(),
+                version: "1.0"
+            };
+
+            const dataStr = JSON.stringify(dataToExport, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `book-tracker-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    // Validate the data structure
+                    if (importedData.books && importedData.paidOffBooks) {
+                        if (confirm('This will replace all current data. Are you sure?')) {
+                            books = importedData.books;
+                            paidOffBooks = importedData.paidOffBooks;
+                            saveData();
+                            renderTables();
+                            alert('Data imported successfully!');
+                        }
+                    } else {
+                        alert('Invalid file format. Please select a valid backup file.');
+                    }
+                } catch (error) {
+                    alert('Error reading file. Please make sure it\'s a valid backup file.');
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset the file input
+            event.target.value = '';
+        }
+
+        function clearAllData() {
+            if (confirm('This will delete ALL data permanently. Are you sure?\n\nConsider exporting a backup first!')) {
+                if (confirm('Really sure? This cannot be undone!')) {
+                    books = [];
+                    paidOffBooks = [];
+                    localStorage.removeItem('bookTracker');
+                    localStorage.removeItem('paidOffBooks');
+                    renderTables();
+                    alert('All data cleared.');
+                }
+            }
+        }
+
+        function renderTables() {
+            // Render active tracking table
+            const activeTableBody = document.getElementById('activeTableBody');
+            activeTableBody.innerHTML = '';
+
+            books.forEach(book => {
+                const row = document.createElement('tr');
+                const remaining = book.devCost - book.cumulativeProfit;
+                const status = remaining <= 0 ? 'Paid Off!' : `$${remaining.toFixed(2)} remaining`;
+                const profitClass = book.cumulativeProfit >= 0 ? 'profit-positive' : 'profit-negative';
+
+                row.innerHTML = `
+                    <td><strong>${book.title}</strong></td>
+                    <td>$${book.devCost.toFixed(2)}</td>
+                    <td>${new Date(book.launchDate).toLocaleDateString()}</td>
+                    <td class="${profitClass}">$${book.cumulativeProfit.toFixed(2)}</td>
+                    <td>${status}</td>
+                    <td class="estimated-timeline">${estimatePayoffQuarters(book)}</td>
+                    <td><button onclick="deleteBook(${book.id})" style="background: #e53e3e; font-size: 12px; padding: 5px 10px;">Delete</button></td>
+                `;
+                activeTableBody.appendChild(row);
+            });
+
+            // Render paid off books table
+            const paidOffTableBody = document.getElementById('paidOffTableBody');
+            paidOffTableBody.innerHTML = '';
+
+            paidOffBooks.forEach(book => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${book.title}</strong></td>
+                    <td>$${book.devCost.toFixed(2)}</td>
+                    <td>${book.monthsToPayoff} months</td>
+                    <td class="profit-positive">$${book.finalProfit.toFixed(2)}</td>
+                    <td>${new Date(book.launchDate).toLocaleDateString()}</td>
+                    <td>${new Date(book.payoffDate).toLocaleDateString()}</td>
+                `;
+                paidOffTableBody.appendChild(row);
+            });
+
+            // Update book select dropdown
+            const updateBookSelect = document.getElementById('updateBookSelect');
+            updateBookSelect.innerHTML = '<option value="">Select Book to Update</option>';
+            books.forEach(book => {
+                const option = document.createElement('option');
+                option.value = book.id;
+                option.textContent = book.title;
+                updateBookSelect.appendChild(option);
+            });
+        }
+
+        // Initialize the app
+        renderTables();
+    </script>
+</body>
+</html>
