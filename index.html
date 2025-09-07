@@ -137,6 +137,13 @@
             margin-bottom: 20px;
         }
         
+        .cost-breakdown-group {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 10px;
+            align-items: end;
+        }
+        
         label {
             display: block;
             font-weight: 600;
@@ -235,6 +242,47 @@
         .hidden {
             display: none !important;
         }
+        
+        .edit-btn, .save-btn, .cancel-btn {
+            padding: 5px 10px;
+            font-size: 12px;
+            margin-right: 5px;
+            width: auto;
+        }
+        
+        .edit-btn {
+            background: #3182ce;
+        }
+        
+        .save-btn {
+            background: #38a169;
+        }
+        
+        .cancel-btn {
+            background: #718096;
+        }
+        
+        .delete-btn {
+            background: #e53e3e;
+        }
+        
+        .cost-breakdown {
+            font-size: 0.9em;
+            color: #718096;
+            margin-top: 5px;
+        }
+        
+        .edit-row {
+            background: #f0f8ff !important;
+        }
+        
+        .edit-input {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #667eea;
+            border-radius: 4px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -280,9 +328,27 @@
                         <label for="bookTitle">Book Title</label>
                         <input type="text" id="bookTitle" placeholder="Enter book title">
                     </div>
-                    <div>
-                        <label for="devCost">Development Cost ($)</label>
-                        <input type="number" id="devCost" placeholder="0.00" step="0.01">
+                    <div class="cost-breakdown-group">
+                        <div>
+                            <label for="devCost">Development Cost ($)</label>
+                            <input type="number" id="devCost" placeholder="0.00" step="0.01">
+                        </div>
+                        <div>
+                            <label for="costCategory">Cost Category</label>
+                            <select id="costCategory">
+                                <option value="">Select category...</option>
+                                <option value="Cover Design">Cover Design</option>
+                                <option value="Editing">Editing</option>
+                                <option value="Formatting">Formatting</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Printing">Printing</option>
+                                <option value="ISBN/Copyright">ISBN/Copyright</option>
+                                <option value="Illustration">Illustration</option>
+                                <option value="Translation">Translation</option>
+                                <option value="Software/Tools">Software/Tools</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
                     </div>
                     <div>
                         <label for="launchDate">Release Date</label>
@@ -299,7 +365,7 @@
                     <thead>
                         <tr>
                             <th>Book Title</th>
-                            <th>Dev Cost</th>
+                            <th>Dev Cost & Category</th>
                             <th>Release Date</th>
                             <th>Cumulative Profit</th>
                             <th>Status</th>
@@ -315,6 +381,7 @@
                     <strong>How it works:</strong> Add quarterly profit updates until cumulative profit ≥ development cost. 
                     The system calculates estimated payoff timeline based on your average quarterly performance.
                     <br><strong>☁️ Cloud Sync:</strong> Your data is automatically saved to your Google account and synced across all devices!
+                    <br><strong>✏️ Editing:</strong> Click "Edit" on any book to modify its details!
                 </div>
             </div>
             
@@ -326,7 +393,7 @@
                     <thead>
                         <tr>
                             <th>Book Title</th>
-                            <th>Dev Cost</th>
+                            <th>Dev Cost & Category</th>
                             <th>Months to Payoff</th>
                             <th>Final Profit at Payoff</th>
                             <th>Release Date</th>
@@ -416,6 +483,7 @@
         let currentUser = null;
         let books = [];
         let paidOffBooks = [];
+        let editingBookId = null;
 
         // Make functions globally available
         window.signInWithGoogle = signInWithGoogle;
@@ -423,6 +491,9 @@
         window.addBook = addBook;
         window.updateQuarterlyProfit = updateQuarterlyProfit;
         window.deleteBook = deleteBook;
+        window.editBook = editBook;
+        window.saveBookEdit = saveBookEdit;
+        window.cancelBookEdit = cancelBookEdit;
         window.exportData = exportData;
         window.importData = importData;
         window.clearAllData = clearAllData;
@@ -530,10 +601,11 @@
 
             const title = document.getElementById('bookTitle').value;
             const devCost = parseFloat(document.getElementById('devCost').value);
+            const costCategory = document.getElementById('costCategory').value;
             const launchDate = document.getElementById('launchDate').value;
 
             if (!title || !devCost || !launchDate) {
-                alert('Please fill in all fields');
+                alert('Please fill in title, cost, and release date');
                 return;
             }
 
@@ -546,6 +618,7 @@
                     id: Date.now(),
                     title,
                     devCost,
+                    costCategory: costCategory || 'Unspecified',
                     launchDate,
                     quarterlyUpdates: [],
                     cumulativeProfit: 0,
@@ -563,6 +636,51 @@
                 addBookBtn.disabled = false;
                 addBookBtn.textContent = 'Add Book';
             }
+        }
+
+        async function editBook(bookId) {
+            editingBookId = bookId;
+            renderTables();
+        }
+
+        async function saveBookEdit(bookId) {
+            const book = books.find(b => b.id === bookId);
+            if (!book) return;
+
+            const row = document.querySelector(`tr[data-book-id="${bookId}"]`);
+            const titleInput = row.querySelector('.edit-title');
+            const costInput = row.querySelector('.edit-cost');
+            const categorySelect = row.querySelector('.edit-category');
+            const dateInput = row.querySelector('.edit-date');
+
+            const newTitle = titleInput.value.trim();
+            const newCost = parseFloat(costInput.value);
+            const newCategory = categorySelect.value;
+            const newDate = dateInput.value;
+
+            if (!newTitle || isNaN(newCost) || !newDate) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            try {
+                book.title = newTitle;
+                book.devCost = newCost;
+                book.costCategory = newCategory || 'Unspecified';
+                book.launchDate = newDate;
+
+                await saveBookToFirebase(book);
+                editingBookId = null;
+                renderTables();
+                alert('Book updated successfully!');
+            } catch (error) {
+                alert('Failed to update book. Please try again.');
+            }
+        }
+
+        function cancelBookEdit() {
+            editingBookId = null;
+            renderTables();
         }
 
         async function updateQuarterlyProfit() {
@@ -647,6 +765,7 @@
         function clearInputs() {
             document.getElementById('bookTitle').value = '';
             document.getElementById('devCost').value = '';
+            document.getElementById('costCategory').value = '';
             document.getElementById('launchDate').value = '';
         }
 
@@ -684,19 +803,63 @@
 
             books.forEach(book => {
                 const row = document.createElement('tr');
+                row.setAttribute('data-book-id', book.id);
+                
                 const remaining = book.devCost - book.cumulativeProfit;
                 const status = remaining <= 0 ? 'Paid Off!' : `$${remaining.toFixed(2)} remaining`;
                 const profitClass = book.cumulativeProfit >= 0 ? 'profit-positive' : 'profit-negative';
 
-                row.innerHTML = `
-                    <td><strong>${book.title}</strong></td>
-                    <td>$${book.devCost.toFixed(2)}</td>
-                    <td>${new Date(book.launchDate).toLocaleDateString()}</td>
-                    <td class="${profitClass}">$${book.cumulativeProfit.toFixed(2)}</td>
-                    <td>${status}</td>
-                    <td class="estimated-timeline">${estimatePayoffQuarters(book)}</td>
-                    <td><button onclick="deleteBook(${book.id})" style="background: #e53e3e; font-size: 12px; padding: 5px 10px; width: auto;">Delete</button></td>
-                `;
+                if (editingBookId === book.id) {
+                    row.classList.add('edit-row');
+                    row.innerHTML = `
+                        <td>
+                            <input type="text" class="edit-input edit-title" value="${book.title}">
+                        </td>
+                        <td>
+                            <input type="number" class="edit-input edit-cost" value="${book.devCost}" step="0.01">
+                            <br><br>
+                            <select class="edit-input edit-category">
+                                <option value="">Select category...</option>
+                                <option value="Cover Design" ${book.costCategory === 'Cover Design' ? 'selected' : ''}>Cover Design</option>
+                                <option value="Editing" ${book.costCategory === 'Editing' ? 'selected' : ''}>Editing</option>
+                                <option value="Formatting" ${book.costCategory === 'Formatting' ? 'selected' : ''}>Formatting</option>
+                                <option value="Marketing" ${book.costCategory === 'Marketing' ? 'selected' : ''}>Marketing</option>
+                                <option value="Printing" ${book.costCategory === 'Printing' ? 'selected' : ''}>Printing</option>
+                                <option value="ISBN/Copyright" ${book.costCategory === 'ISBN/Copyright' ? 'selected' : ''}>ISBN/Copyright</option>
+                                <option value="Illustration" ${book.costCategory === 'Illustration' ? 'selected' : ''}>Illustration</option>
+                                <option value="Translation" ${book.costCategory === 'Translation' ? 'selected' : ''}>Translation</option>
+                                <option value="Software/Tools" ${book.costCategory === 'Software/Tools' ? 'selected' : ''}>Software/Tools</option>
+                                <option value="Other" ${book.costCategory === 'Other' ? 'selected' : ''}>Other</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="date" class="edit-input edit-date" value="${book.launchDate}">
+                        </td>
+                        <td class="${profitClass}">$${book.cumulativeProfit.toFixed(2)}</td>
+                        <td>${status}</td>
+                        <td class="estimated-timeline">${estimatePayoffQuarters(book)}</td>
+                        <td>
+                            <button onclick="saveBookEdit(${book.id})" class="save-btn">Save</button>
+                            <button onclick="cancelBookEdit()" class="cancel-btn">Cancel</button>
+                        </td>
+                    `;
+                } else {
+                    row.innerHTML = `
+                        <td><strong>${book.title}</strong></td>
+                        <td>
+                            $${book.devCost.toFixed(2)}
+                            <div class="cost-breakdown">${book.costCategory || 'Unspecified'}</div>
+                        </td>
+                        <td>${new Date(book.launchDate).toLocaleDateString()}</td>
+                        <td class="${profitClass}">$${book.cumulativeProfit.toFixed(2)}</td>
+                        <td>${status}</td>
+                        <td class="estimated-timeline">${estimatePayoffQuarters(book)}</td>
+                        <td>
+                            <button onclick="editBook(${book.id})" class="edit-btn">Edit</button>
+                            <button onclick="deleteBook(${book.id})" class="delete-btn">Delete</button>
+                        </td>
+                    `;
+                }
                 activeTableBody.appendChild(row);
             });
 
@@ -708,7 +871,10 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td><strong>${book.title}</strong></td>
-                    <td>$${book.devCost.toFixed(2)}</td>
+                    <td>
+                        $${book.devCost.toFixed(2)}
+                        <div class="cost-breakdown">${book.costCategory || 'Unspecified'}</div>
+                    </td>
                     <td>${book.monthsToPayoff} months</td>
                     <td class="profit-positive">$${book.finalProfit.toFixed(2)}</td>
                     <td>${new Date(book.launchDate).toLocaleDateString()}</td>
@@ -735,7 +901,7 @@
                 paidOffBooks: paidOffBooks,
                 exportDate: new Date().toISOString(),
                 userEmail: currentUser?.email,
-                version: "2.0"
+                version: "2.1"
             };
 
             const dataStr = JSON.stringify(dataToExport, null, 2);
