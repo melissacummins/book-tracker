@@ -283,6 +283,7 @@
             gap: 5px;
             margin-bottom: 5px;
             align-items: center;
+            min-height: 32px;
         }
         
         .add-cost-btn {
@@ -294,6 +295,7 @@
             font-size: 11px;
             cursor: pointer;
             width: auto;
+            margin-left: 10px;
         }
         
         .remove-cost-btn {
@@ -372,7 +374,7 @@
                         </select>
                     </div>
                     <div>
-                        <label for="launchDate">Release Date</label>
+                        <label for="launchDate">Release Date (Optional)</label>
                         <input type="date" id="launchDate">
                     </div>
                     <div>
@@ -419,6 +421,7 @@
                             <th>Final Profit at Payoff</th>
                             <th>Release Date</th>
                             <th>Payoff Date</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="paidOffTableBody">
@@ -505,7 +508,9 @@
         let books = [];
         let paidOffBooks = [];
         let editingBookId = null;
+        let editingPaidOffBookId = null;
         let editingCosts = [];
+        let editingPaidOffCosts = [];
 
         // Make functions globally available
         window.signInWithGoogle = signInWithGoogle;
@@ -518,177 +523,16 @@
         window.cancelBookEdit = cancelBookEdit;
         window.addCostRow = addCostRow;
         window.removeCostRow = removeCostRow;
+        window.updateTotalDisplay = updateTotalDisplay;
+        window.editPaidOffBook = editPaidOffBook;
+        window.savePaidOffBookEdit = savePaidOffBookEdit;
+        window.cancelPaidOffBookEdit = cancelPaidOffBookEdit;
+        window.addPaidOffCostRow = addPaidOffCostRow;
+        window.removePaidOffCostRow = removePaidOffCostRow;
+        window.updatePaidOffTotalDisplay = updatePaidOffTotalDisplay;
         window.exportData = exportData;
         window.importData = importData;
         window.clearAllData = clearAllData;
-
-        // Paid Off Book Editing Functions
-        async function editPaidOffBook(bookId) {
-            editingPaidOffBookId = bookId;
-            const book = paidOffBooks.find(b => b.id === bookId);
-            
-            // Initialize editing costs with current breakdown
-            if (book.costBreakdown) {
-                editingPaidOffCosts = [...book.costBreakdown];
-            } else {
-                // Convert old format
-                editingPaidOffCosts = [{
-                    category: book.costCategory || 'Unspecified',
-                    amount: book.devCost
-                }];
-            }
-            
-            renderTables();
-        }
-
-        function addPaidOffCostRow() {
-            // Capture current values before adding new row
-            updatePaidOffEditingCostsFromDOM();
-            
-            editingPaidOffCosts.push({
-                category: 'Other',
-                amount: 0
-            });
-            renderTables();
-        }
-
-        function removePaidOffCostRow(index) {
-            if (editingPaidOffCosts.length > 1) {
-                // Capture current values before removing row
-                updatePaidOffEditingCostsFromDOM();
-                
-                editingPaidOffCosts.splice(index, 1);
-                renderTables();
-            } else {
-                alert('A book must have at least one cost entry.');
-            }
-        }
-
-        function updatePaidOffEditingCostsFromDOM() {
-            if (!editingPaidOffBookId) return;
-            
-            const row = document.querySelector(`tr[data-paid-off-book-id="${editingPaidOffBookId}"]`);
-            if (!row) return;
-            
-            const costInputs = row.querySelectorAll('.edit-paid-off-cost-amount');
-            const categorySelects = row.querySelectorAll('.edit-paid-off-cost-category');
-            
-            // Update editingPaidOffCosts with current DOM values
-            for (let i = 0; i < Math.min(costInputs.length, editingPaidOffCosts.length); i++) {
-                editingPaidOffCosts[i].amount = parseFloat(costInputs[i].value) || 0;
-                editingPaidOffCosts[i].category = categorySelects[i].value || 'Unspecified';
-            }
-        }
-
-        function updatePaidOffTotalDisplay() {
-            if (!editingPaidOffBookId) return;
-            
-            const row = document.querySelector(`tr[data-paid-off-book-id="${editingPaidOffBookId}"]`);
-            if (!row) return;
-            
-            const costInputs = row.querySelectorAll('.edit-paid-off-cost-amount');
-            let total = 0;
-            
-            costInputs.forEach(input => {
-                const value = parseFloat(input.value) || 0;
-                total += value;
-            });
-            
-            const totalDisplay = document.getElementById('editingPaidOffTotal');
-            if (totalDisplay) {
-                totalDisplay.textContent = `Total: ${total.toFixed(2)}`;
-            }
-        }
-
-        async function savePaidOffBookEdit(bookId) {
-            const book = paidOffBooks.find(b => b.id === bookId);
-            if (!book) return;
-
-            const row = document.querySelector(`tr[data-paid-off-book-id="${bookId}"]`);
-            const titleInput = row.querySelector('.edit-paid-off-title');
-            const monthsInput = row.querySelector('.edit-paid-off-months');
-            const profitInput = row.querySelector('.edit-paid-off-profit');
-            const launchDateInput = row.querySelector('.edit-paid-off-launch-date');
-            const payoffDateInput = row.querySelector('.edit-paid-off-payoff-date');
-            const costInputs = row.querySelectorAll('.edit-paid-off-cost-amount');
-            const categorySelects = row.querySelectorAll('.edit-paid-off-cost-category');
-
-            const newTitle = titleInput.value.trim();
-            const newMonths = parseInt(monthsInput.value);
-            const newProfit = parseFloat(profitInput.value);
-            const newLaunchDate = launchDateInput.value;
-            const newPayoffDate = payoffDateInput.value;
-
-            if (!newTitle) {
-                alert('Please fill in the title');
-                return;
-            }
-
-            // Validate and collect cost data
-            const newCostBreakdown = [];
-            let totalCost = 0;
-
-            for (let i = 0; i < costInputs.length; i++) {
-                const amount = parseFloat(costInputs[i].value);
-                const category = categorySelects[i].value;
-
-                if (isNaN(amount) || amount <= 0) {
-                    alert(`Please enter a valid amount for cost #${i + 1}`);
-                    return;
-                }
-
-                newCostBreakdown.push({
-                    category: category || 'Unspecified',
-                    amount: amount
-                });
-                totalCost += amount;
-            }
-
-            try {
-                book.title = newTitle;
-                book.monthsToPayoff = isNaN(newMonths) ? 0 : newMonths;
-                book.finalProfit = isNaN(newProfit) ? 0 : newProfit;
-                book.launchDate = newLaunchDate || null;
-                book.payoffDate = newPayoffDate ? new Date(newPayoffDate).toISOString() : book.payoffDate;
-                book.costBreakdown = newCostBreakdown;
-                book.devCost = totalCost;
-
-                await saveBookToFirebase(book, 'paidOffBooks');
-                editingPaidOffBookId = null;
-                editingPaidOffCosts = [];
-                renderTables();
-                alert(`Paid off book updated successfully! Total development cost: ${totalCost.toFixed(2)}`);
-            } catch (error) {
-                console.error('Error updating paid off book:', error);
-                alert('Failed to update book. Please try again.');
-            }
-        }
-
-        function cancelPaidOffBookEdit() {
-            editingPaidOffBookId = null;
-            editingPaidOffCosts = [];
-            renderTables();
-        }
-
-        function updateTotalDisplay() {
-            if (!editingBookId) return;
-            
-            const row = document.querySelector(`tr[data-book-id="${editingBookId}"]`);
-            if (!row) return;
-            
-            const costInputs = row.querySelectorAll('.edit-cost-amount');
-            let total = 0;
-            
-            costInputs.forEach(input => {
-                const value = parseFloat(input.value) || 0;
-                total += value;
-            });
-            
-            const totalDisplay = document.getElementById('editingTotal');
-            if (totalDisplay) {
-                totalDisplay.textContent = `Total: ${total.toFixed(2)}`;
-            }
-        }
 
         // Authentication functions
         async function signInWithGoogle() {
@@ -784,6 +628,53 @@
             }
         }
 
+        // Utility functions
+        function parseQuarterToDate(quarter) {
+            // Parse "Q1 2023" format to actual date
+            const match = quarter.match(/^Q([1-4])\s+(\d{4})$/);
+            if (!match) return new Date(); // Fallback to current date if format is wrong
+            
+            const quarterNum = parseInt(match[1]);
+            const year = parseInt(match[2]);
+            
+            // Map quarters to months (using end of quarter)
+            const quarterEndMonths = {
+                1: 2,  // Q1 ends in March (month 2, 0-indexed)
+                2: 5,  // Q2 ends in June (month 5)
+                3: 8,  // Q3 ends in September (month 8)
+                4: 11  // Q4 ends in December (month 11)
+            };
+            
+            // Use last day of the quarter
+            const month = quarterEndMonths[quarterNum];
+            const lastDay = new Date(year, month + 1, 0).getDate(); // Get last day of month
+            
+            return new Date(year, month, lastDay);
+        }
+
+        function calculateMonthsToPayoff(book, payoffDate = null) {
+            if (!book.launchDate) return 0;
+            
+            const launchDate = new Date(book.launchDate);
+            const endDate = payoffDate || new Date();
+            const diffInMonths = (endDate.getFullYear() - launchDate.getFullYear()) * 12 + 
+                               (endDate.getMonth() - launchDate.getMonth());
+            return Math.max(0, diffInMonths);
+        }
+
+        function estimatePayoffQuarters(book) {
+            if (book.quarterlyUpdates.length === 0) return "Need data";
+            
+            const avgQuarterlyProfit = book.cumulativeProfit / book.quarterlyUpdates.length;
+            const remaining = book.devCost - book.cumulativeProfit;
+            
+            if (remaining <= 0) return "Paid off!";
+            if (avgQuarterlyProfit <= 0) return "No profit yet";
+            
+            const quartersRemaining = Math.ceil(remaining / avgQuarterlyProfit);
+            return `~${quartersRemaining} quarters`;
+        }
+
         // App functions
         async function addBook() {
             if (!currentUser) {
@@ -796,8 +687,8 @@
             const costCategory = document.getElementById('costCategory').value;
             const launchDate = document.getElementById('launchDate').value;
 
-            if (!title || !devCost || !launchDate) {
-                alert('Please fill in title, cost, and release date');
+            if (!title || !devCost) {
+                alert('Please fill in title and cost (release date is optional)');
                 return;
             }
 
@@ -814,7 +705,7 @@
                         category: costCategory || 'Unspecified',
                         amount: devCost
                     }],
-                    launchDate,
+                    launchDate: launchDate || null,
                     quarterlyUpdates: [],
                     cumulativeProfit: 0,
                     createdAt: new Date().toISOString()
@@ -834,6 +725,7 @@
             }
         }
 
+        // Active book editing functions
         async function editBook(bookId) {
             editingBookId = bookId;
             const book = books.find(b => b.id === bookId);
@@ -853,6 +745,9 @@
         }
 
         function addCostRow() {
+            // Capture current values before adding new row
+            updateEditingCostsFromDOM();
+            
             editingCosts.push({
                 category: 'Other',
                 amount: 0
@@ -862,10 +757,49 @@
 
         function removeCostRow(index) {
             if (editingCosts.length > 1) {
+                // Capture current values before removing row
+                updateEditingCostsFromDOM();
+                
                 editingCosts.splice(index, 1);
                 renderTables();
             } else {
                 alert('A book must have at least one cost entry.');
+            }
+        }
+
+        function updateEditingCostsFromDOM() {
+            if (!editingBookId) return;
+            
+            const row = document.querySelector(`tr[data-book-id="${editingBookId}"]`);
+            if (!row) return;
+            
+            const costInputs = row.querySelectorAll('.edit-cost-amount');
+            const categorySelects = row.querySelectorAll('.edit-cost-category');
+            
+            // Update editingCosts with current DOM values
+            for (let i = 0; i < Math.min(costInputs.length, editingCosts.length); i++) {
+                editingCosts[i].amount = parseFloat(costInputs[i].value) || 0;
+                editingCosts[i].category = categorySelects[i].value || 'Unspecified';
+            }
+        }
+
+        function updateTotalDisplay() {
+            if (!editingBookId) return;
+            
+            const row = document.querySelector(`tr[data-book-id="${editingBookId}"]`);
+            if (!row) return;
+            
+            const costInputs = row.querySelectorAll('.edit-cost-amount');
+            let total = 0;
+            
+            costInputs.forEach(input => {
+                const value = parseFloat(input.value) || 0;
+                total += value;
+            });
+            
+            const totalDisplay = document.getElementById('editingTotal');
+            if (totalDisplay) {
+                totalDisplay.textContent = `Total: $${total.toFixed(2)}`;
             }
         }
 
@@ -882,8 +816,8 @@
             const newTitle = titleInput.value.trim();
             const newDate = dateInput.value;
 
-            if (!newTitle || !newDate) {
-                alert('Please fill in title and release date');
+            if (!newTitle) {
+                alert('Please fill in the title');
                 return;
             }
 
@@ -909,7 +843,7 @@
 
             try {
                 book.title = newTitle;
-                book.launchDate = newDate;
+                book.launchDate = newDate || null;
                 book.costBreakdown = newCostBreakdown;
                 book.devCost = totalCost;
 
@@ -927,6 +861,154 @@
         function cancelBookEdit() {
             editingBookId = null;
             editingCosts = [];
+            renderTables();
+        }
+
+        // Paid off book editing functions
+        async function editPaidOffBook(bookId) {
+            editingPaidOffBookId = bookId;
+            const book = paidOffBooks.find(b => b.id === bookId);
+            
+            // Initialize editing costs with current breakdown
+            if (book.costBreakdown) {
+                editingPaidOffCosts = [...book.costBreakdown];
+            } else {
+                // Convert old format
+                editingPaidOffCosts = [{
+                    category: book.costCategory || 'Unspecified',
+                    amount: book.devCost
+                }];
+            }
+            
+            renderTables();
+        }
+
+        function addPaidOffCostRow() {
+            // Capture current values before adding new row
+            updatePaidOffEditingCostsFromDOM();
+            
+            editingPaidOffCosts.push({
+                category: 'Other',
+                amount: 0
+            });
+            renderTables();
+        }
+
+        function removePaidOffCostRow(index) {
+            if (editingPaidOffCosts.length > 1) {
+                // Capture current values before removing row
+                updatePaidOffEditingCostsFromDOM();
+                
+                editingPaidOffCosts.splice(index, 1);
+                renderTables();
+            } else {
+                alert('A book must have at least one cost entry.');
+            }
+        }
+
+        function updatePaidOffEditingCostsFromDOM() {
+            if (!editingPaidOffBookId) return;
+            
+            const row = document.querySelector(`tr[data-paid-off-book-id="${editingPaidOffBookId}"]`);
+            if (!row) return;
+            
+            const costInputs = row.querySelectorAll('.edit-paid-off-cost-amount');
+            const categorySelects = row.querySelectorAll('.edit-paid-off-cost-category');
+            
+            // Update editingPaidOffCosts with current DOM values
+            for (let i = 0; i < Math.min(costInputs.length, editingPaidOffCosts.length); i++) {
+                editingPaidOffCosts[i].amount = parseFloat(costInputs[i].value) || 0;
+                editingPaidOffCosts[i].category = categorySelects[i].value || 'Unspecified';
+            }
+        }
+
+        function updatePaidOffTotalDisplay() {
+            if (!editingPaidOffBookId) return;
+            
+            const row = document.querySelector(`tr[data-paid-off-book-id="${editingPaidOffBookId}"]`);
+            if (!row) return;
+            
+            const costInputs = row.querySelectorAll('.edit-paid-off-cost-amount');
+            let total = 0;
+            
+            costInputs.forEach(input => {
+                const value = parseFloat(input.value) || 0;
+                total += value;
+            });
+            
+            const totalDisplay = document.getElementById('editingPaidOffTotal');
+            if (totalDisplay) {
+                totalDisplay.textContent = `Total: $${total.toFixed(2)}`;
+            }
+        }
+
+        async function savePaidOffBookEdit(bookId) {
+            const book = paidOffBooks.find(b => b.id === bookId);
+            if (!book) return;
+
+            const row = document.querySelector(`tr[data-paid-off-book-id="${bookId}"]`);
+            const titleInput = row.querySelector('.edit-paid-off-title');
+            const monthsInput = row.querySelector('.edit-paid-off-months');
+            const profitInput = row.querySelector('.edit-paid-off-profit');
+            const launchDateInput = row.querySelector('.edit-paid-off-launch-date');
+            const payoffDateInput = row.querySelector('.edit-paid-off-payoff-date');
+            const costInputs = row.querySelectorAll('.edit-paid-off-cost-amount');
+            const categorySelects = row.querySelectorAll('.edit-paid-off-cost-category');
+
+            const newTitle = titleInput.value.trim();
+            const newMonths = parseInt(monthsInput.value);
+            const newProfit = parseFloat(profitInput.value);
+            const newLaunchDate = launchDateInput.value;
+            const newPayoffDate = payoffDateInput.value;
+
+            if (!newTitle) {
+                alert('Please fill in the title');
+                return;
+            }
+
+            // Validate and collect cost data
+            const newCostBreakdown = [];
+            let totalCost = 0;
+
+            for (let i = 0; i < costInputs.length; i++) {
+                const amount = parseFloat(costInputs[i].value);
+                const category = categorySelects[i].value;
+
+                if (isNaN(amount) || amount <= 0) {
+                    alert(`Please enter a valid amount for cost #${i + 1}`);
+                    return;
+                }
+
+                newCostBreakdown.push({
+                    category: category || 'Unspecified',
+                    amount: amount
+                });
+                totalCost += amount;
+            }
+
+            try {
+                book.title = newTitle;
+                book.monthsToPayoff = isNaN(newMonths) ? 0 : newMonths;
+                book.finalProfit = isNaN(newProfit) ? 0 : newProfit;
+                book.launchDate = newLaunchDate || null;
+                book.payoffDate = newPayoffDate ? new Date(newPayoffDate).toISOString() : book.payoffDate;
+                book.costBreakdown = newCostBreakdown;
+                book.devCost = totalCost;
+
+                await saveBookToFirebase(book, 'paidOffBooks');
+                editingPaidOffBookId = null;
+                editingPaidOffCosts = [];
+                renderTables();
+                alert(`Paid off book updated successfully! Total development cost: $${totalCost.toFixed(2)}`);
+            } catch (error) {
+                console.error('Error updating paid off book:', error);
+                alert('Failed to update book. Please try again.');
+            }
+        }
+
+        function cancelPaidOffBookEdit() {
+            editingPaidOffBookId = null;
+            editingPaidOffCosts = [];
             renderTables();
         }
 
@@ -963,11 +1045,14 @@
 
                 // Check if book is now paid off
                 if (books[bookIndex].cumulativeProfit >= books[bookIndex].devCost) {
+                    const payoffDate = parseQuarterToDate(quarter);
+                    
                     const paidOffBook = {
                         ...books[bookIndex],
-                        payoffDate: new Date().toISOString(),
-                        monthsToPayoff: calculateMonthsToPayoff(books[bookIndex]),
-                        finalProfit: books[bookIndex].cumulativeProfit
+                        payoffDate: payoffDate.toISOString(),
+                        monthsToPayoff: calculateMonthsToPayoff(books[bookIndex], payoffDate),
+                        finalProfit: books[bookIndex].cumulativeProfit,
+                        payoffQuarter: quarter
                     };
                     
                     await saveBookToFirebase(paidOffBook, 'paidOffBooks');
@@ -1016,27 +1101,6 @@
             document.getElementById('launchDate').value = '';
         }
 
-        function calculateMonthsToPayoff(book) {
-            const launchDate = new Date(book.launchDate);
-            const payoffDate = new Date();
-            const diffInMonths = (payoffDate.getFullYear() - launchDate.getFullYear()) * 12 + 
-                               (payoffDate.getMonth() - launchDate.getMonth());
-            return diffInMonths;
-        }
-
-        function estimatePayoffQuarters(book) {
-            if (book.quarterlyUpdates.length === 0) return "Need data";
-            
-            const avgQuarterlyProfit = book.cumulativeProfit / book.quarterlyUpdates.length;
-            const remaining = book.devCost - book.cumulativeProfit;
-            
-            if (remaining <= 0) return "Paid off!";
-            if (avgQuarterlyProfit <= 0) return "No profit yet";
-            
-            const quartersRemaining = Math.ceil(remaining / avgQuarterlyProfit);
-            return `~${quartersRemaining} quarters`;
-        }
-
         function renderTables() {
             // Show/hide loading states
             document.getElementById('loadingActive').classList.add('hidden');
@@ -1059,12 +1123,12 @@
                 if (editingBookId === book.id) {
                     row.classList.add('edit-row');
                     
-                    // Create editable cost breakdown
+                    // Create editable cost breakdown with real-time total update
                     let costsHtml = '';
                     editingCosts.forEach((cost, index) => {
                         costsHtml += `
                             <div class="cost-row">
-                                <select class="edit-input edit-cost-category" style="flex: 1;">
+                                <select class="edit-input edit-cost-category" style="flex: 1;" onchange="updateTotalDisplay()">
                                     <option value="Cover Design" ${cost.category === 'Cover Design' ? 'selected' : ''}>Cover Design</option>
                                     <option value="Editing" ${cost.category === 'Editing' ? 'selected' : ''}>Editing</option>
                                     <option value="Formatting" ${cost.category === 'Formatting' ? 'selected' : ''}>Formatting</option>
@@ -1077,7 +1141,7 @@
                                     <option value="Other" ${cost.category === 'Other' ? 'selected' : ''}>Other</option>
                                     <option value="Unspecified" ${cost.category === 'Unspecified' ? 'selected' : ''}>Unspecified</option>
                                 </select>
-                                <input type="number" class="edit-input edit-cost-amount" value="${cost.amount}" step="0.01" style="width: 80px;">
+                                <input type="number" class="edit-input edit-cost-amount" value="${cost.amount}" step="0.01" style="width: 80px;" oninput="updateTotalDisplay()">
                                 ${editingCosts.length > 1 ? `<button onclick="removeCostRow(${index})" class="remove-cost-btn">×</button>` : ''}
                             </div>
                         `;
@@ -1091,13 +1155,13 @@
                         </td>
                         <td>
                             <div style="margin-bottom: 10px;">
-                                <strong>Total: $${totalCost.toFixed(2)}</strong>
+                                <strong id="editingTotal">Total: $${totalCost.toFixed(2)}</strong>
                                 <button onclick="addCostRow()" class="add-cost-btn">+ Add Cost</button>
                             </div>
                             ${costsHtml}
                         </td>
                         <td>
-                            <input type="date" class="edit-input edit-date" value="${book.launchDate}">
+                            <input type="date" class="edit-input edit-date" value="${book.launchDate || ''}">
                         </td>
                         <td class="${profitClass}">$${book.cumulativeProfit.toFixed(2)}</td>
                         <td>${status}</td>
@@ -1138,23 +1202,86 @@
 
             paidOffBooks.forEach(book => {
                 const row = document.createElement('tr');
+                row.setAttribute('data-paid-off-book-id', book.id);
                 
-                // Create cost breakdown display for paid off books
-                const costBreakdownHtml = book.costBreakdown ? 
-                    book.costBreakdown.map(cost => `${cost.category}: $${cost.amount.toFixed(2)}`).join('<br>') :
-                    (book.costCategory || 'Unspecified');
-                
-                row.innerHTML = `
-                    <td><strong>${book.title}</strong></td>
-                    <td>
-                        <strong>$${book.devCost.toFixed(2)}</strong>
-                        <div class="cost-breakdown">${costBreakdownHtml}</div>
-                    </td>
-                    <td>${book.monthsToPayoff} months</td>
-                    <td class="profit-positive">$${book.finalProfit.toFixed(2)}</td>
-                    <td>${new Date(book.launchDate).toLocaleDateString()}</td>
-                    <td>${new Date(book.payoffDate).toLocaleDateString()}</td>
-                `;
+                if (editingPaidOffBookId === book.id) {
+                    row.classList.add('edit-row');
+                    
+                    // Create editable cost breakdown for paid off books
+                    let costsHtml = '';
+                    editingPaidOffCosts.forEach((cost, index) => {
+                        costsHtml += `
+                            <div class="cost-row">
+                                <select class="edit-input edit-paid-off-cost-category" style="flex: 1;" onchange="updatePaidOffTotalDisplay()">
+                                    <option value="Cover Design" ${cost.category === 'Cover Design' ? 'selected' : ''}>Cover Design</option>
+                                    <option value="Editing" ${cost.category === 'Editing' ? 'selected' : ''}>Editing</option>
+                                    <option value="Formatting" ${cost.category === 'Formatting' ? 'selected' : ''}>Formatting</option>
+                                    <option value="Marketing" ${cost.category === 'Marketing' ? 'selected' : ''}>Marketing</option>
+                                    <option value="Printing" ${cost.category === 'Printing' ? 'selected' : ''}>Printing</option>
+                                    <option value="ISBN/Copyright" ${cost.category === 'ISBN/Copyright' ? 'selected' : ''}>ISBN/Copyright</option>
+                                    <option value="Illustration" ${cost.category === 'Illustration' ? 'selected' : ''}>Illustration</option>
+                                    <option value="Translation" ${cost.category === 'Translation' ? 'selected' : ''}>Translation</option>
+                                    <option value="Software/Tools" ${cost.category === 'Software/Tools' ? 'selected' : ''}>Software/Tools</option>
+                                    <option value="Other" ${cost.category === 'Other' ? 'selected' : ''}>Other</option>
+                                    <option value="Unspecified" ${cost.category === 'Unspecified' ? 'selected' : ''}>Unspecified</option>
+                                </select>
+                                <input type="number" class="edit-input edit-paid-off-cost-amount" value="${cost.amount}" step="0.01" style="width: 80px;" oninput="updatePaidOffTotalDisplay()">
+                                ${editingPaidOffCosts.length > 1 ? `<button onclick="removePaidOffCostRow(${index})" class="remove-cost-btn">×</button>` : ''}
+                            </div>
+                        `;
+                    });
+                    
+                    const totalCost = editingPaidOffCosts.reduce((sum, cost) => sum + cost.amount, 0);
+                    
+                    row.innerHTML = `
+                        <td>
+                            <input type="text" class="edit-input edit-paid-off-title" value="${book.title}">
+                        </td>
+                        <td>
+                            <div style="margin-bottom: 10px;">
+                                <strong id="editingPaidOffTotal">Total: $${totalCost.toFixed(2)}</strong>
+                                <button onclick="addPaidOffCostRow()" class="add-cost-btn">+ Add Cost</button>
+                            </div>
+                            ${costsHtml}
+                        </td>
+                        <td>
+                            <input type="number" class="edit-input edit-paid-off-months" value="${book.monthsToPayoff}" min="0">
+                        </td>
+                        <td>
+                            <input type="number" class="edit-input edit-paid-off-profit" value="${book.finalProfit}" step="0.01">
+                        </td>
+                        <td>
+                            <input type="date" class="edit-input edit-paid-off-launch-date" value="${book.launchDate || ''}">
+                        </td>
+                        <td>
+                            <input type="date" class="edit-input edit-paid-off-payoff-date" value="${book.payoffDate ? book.payoffDate.split('T')[0] : ''}">
+                        </td>
+                        <td>
+                            <button onclick="savePaidOffBookEdit(${book.id})" class="save-btn">Save</button>
+                            <button onclick="cancelPaidOffBookEdit()" class="cancel-btn">Cancel</button>
+                        </td>
+                    `;
+                } else {
+                    // Create cost breakdown display for paid off books
+                    const costBreakdownHtml = book.costBreakdown ? 
+                        book.costBreakdown.map(cost => `${cost.category}: $${cost.amount.toFixed(2)}`).join('<br>') :
+                        (book.costCategory || 'Unspecified');
+                    
+                    row.innerHTML = `
+                        <td><strong>${book.title}</strong></td>
+                        <td>
+                            <strong>$${book.devCost.toFixed(2)}</strong>
+                            <div class="cost-breakdown">${costBreakdownHtml}</div>
+                        </td>
+                        <td>${book.monthsToPayoff} months</td>
+                        <td class="profit-positive">$${book.finalProfit.toFixed(2)}</td>
+                        <td>${book.launchDate ? new Date(book.launchDate).toLocaleDateString() : 'TBD'}</td>
+                        <td>${new Date(book.payoffDate).toLocaleDateString()}</td>
+                        <td>
+                            <button onclick="editPaidOffBook(${book.id})" class="edit-btn">Edit</button>
+                        </td>
+                    `;
+                }
                 paidOffTableBody.appendChild(row);
             });
 
@@ -1176,7 +1303,7 @@
                 paidOffBooks: paidOffBooks,
                 exportDate: new Date().toISOString(),
                 userEmail: currentUser?.email,
-                version: "2.2"
+                version: "3.0"
             };
 
             const dataStr = JSON.stringify(dataToExport, null, 2);
