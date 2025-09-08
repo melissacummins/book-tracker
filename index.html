@@ -522,6 +522,174 @@
         window.importData = importData;
         window.clearAllData = clearAllData;
 
+        // Paid Off Book Editing Functions
+        async function editPaidOffBook(bookId) {
+            editingPaidOffBookId = bookId;
+            const book = paidOffBooks.find(b => b.id === bookId);
+            
+            // Initialize editing costs with current breakdown
+            if (book.costBreakdown) {
+                editingPaidOffCosts = [...book.costBreakdown];
+            } else {
+                // Convert old format
+                editingPaidOffCosts = [{
+                    category: book.costCategory || 'Unspecified',
+                    amount: book.devCost
+                }];
+            }
+            
+            renderTables();
+        }
+
+        function addPaidOffCostRow() {
+            // Capture current values before adding new row
+            updatePaidOffEditingCostsFromDOM();
+            
+            editingPaidOffCosts.push({
+                category: 'Other',
+                amount: 0
+            });
+            renderTables();
+        }
+
+        function removePaidOffCostRow(index) {
+            if (editingPaidOffCosts.length > 1) {
+                // Capture current values before removing row
+                updatePaidOffEditingCostsFromDOM();
+                
+                editingPaidOffCosts.splice(index, 1);
+                renderTables();
+            } else {
+                alert('A book must have at least one cost entry.');
+            }
+        }
+
+        function updatePaidOffEditingCostsFromDOM() {
+            if (!editingPaidOffBookId) return;
+            
+            const row = document.querySelector(`tr[data-paid-off-book-id="${editingPaidOffBookId}"]`);
+            if (!row) return;
+            
+            const costInputs = row.querySelectorAll('.edit-paid-off-cost-amount');
+            const categorySelects = row.querySelectorAll('.edit-paid-off-cost-category');
+            
+            // Update editingPaidOffCosts with current DOM values
+            for (let i = 0; i < Math.min(costInputs.length, editingPaidOffCosts.length); i++) {
+                editingPaidOffCosts[i].amount = parseFloat(costInputs[i].value) || 0;
+                editingPaidOffCosts[i].category = categorySelects[i].value || 'Unspecified';
+            }
+        }
+
+        function updatePaidOffTotalDisplay() {
+            if (!editingPaidOffBookId) return;
+            
+            const row = document.querySelector(`tr[data-paid-off-book-id="${editingPaidOffBookId}"]`);
+            if (!row) return;
+            
+            const costInputs = row.querySelectorAll('.edit-paid-off-cost-amount');
+            let total = 0;
+            
+            costInputs.forEach(input => {
+                const value = parseFloat(input.value) || 0;
+                total += value;
+            });
+            
+            const totalDisplay = document.getElementById('editingPaidOffTotal');
+            if (totalDisplay) {
+                totalDisplay.textContent = `Total: ${total.toFixed(2)}`;
+            }
+        }
+
+        async function savePaidOffBookEdit(bookId) {
+            const book = paidOffBooks.find(b => b.id === bookId);
+            if (!book) return;
+
+            const row = document.querySelector(`tr[data-paid-off-book-id="${bookId}"]`);
+            const titleInput = row.querySelector('.edit-paid-off-title');
+            const monthsInput = row.querySelector('.edit-paid-off-months');
+            const profitInput = row.querySelector('.edit-paid-off-profit');
+            const launchDateInput = row.querySelector('.edit-paid-off-launch-date');
+            const payoffDateInput = row.querySelector('.edit-paid-off-payoff-date');
+            const costInputs = row.querySelectorAll('.edit-paid-off-cost-amount');
+            const categorySelects = row.querySelectorAll('.edit-paid-off-cost-category');
+
+            const newTitle = titleInput.value.trim();
+            const newMonths = parseInt(monthsInput.value);
+            const newProfit = parseFloat(profitInput.value);
+            const newLaunchDate = launchDateInput.value;
+            const newPayoffDate = payoffDateInput.value;
+
+            if (!newTitle) {
+                alert('Please fill in the title');
+                return;
+            }
+
+            // Validate and collect cost data
+            const newCostBreakdown = [];
+            let totalCost = 0;
+
+            for (let i = 0; i < costInputs.length; i++) {
+                const amount = parseFloat(costInputs[i].value);
+                const category = categorySelects[i].value;
+
+                if (isNaN(amount) || amount <= 0) {
+                    alert(`Please enter a valid amount for cost #${i + 1}`);
+                    return;
+                }
+
+                newCostBreakdown.push({
+                    category: category || 'Unspecified',
+                    amount: amount
+                });
+                totalCost += amount;
+            }
+
+            try {
+                book.title = newTitle;
+                book.monthsToPayoff = isNaN(newMonths) ? 0 : newMonths;
+                book.finalProfit = isNaN(newProfit) ? 0 : newProfit;
+                book.launchDate = newLaunchDate || null;
+                book.payoffDate = newPayoffDate ? new Date(newPayoffDate).toISOString() : book.payoffDate;
+                book.costBreakdown = newCostBreakdown;
+                book.devCost = totalCost;
+
+                await saveBookToFirebase(book, 'paidOffBooks');
+                editingPaidOffBookId = null;
+                editingPaidOffCosts = [];
+                renderTables();
+                alert(`Paid off book updated successfully! Total development cost: ${totalCost.toFixed(2)}`);
+            } catch (error) {
+                console.error('Error updating paid off book:', error);
+                alert('Failed to update book. Please try again.');
+            }
+        }
+
+        function cancelPaidOffBookEdit() {
+            editingPaidOffBookId = null;
+            editingPaidOffCosts = [];
+            renderTables();
+        }
+
+        function updateTotalDisplay() {
+            if (!editingBookId) return;
+            
+            const row = document.querySelector(`tr[data-book-id="${editingBookId}"]`);
+            if (!row) return;
+            
+            const costInputs = row.querySelectorAll('.edit-cost-amount');
+            let total = 0;
+            
+            costInputs.forEach(input => {
+                const value = parseFloat(input.value) || 0;
+                total += value;
+            });
+            
+            const totalDisplay = document.getElementById('editingTotal');
+            if (totalDisplay) {
+                totalDisplay.textContent = `Total: ${total.toFixed(2)}`;
+            }
+        }
+
         // Authentication functions
         async function signInWithGoogle() {
             const provider = new GoogleAuthProvider();
@@ -951,7 +1119,7 @@
                             <strong>$${book.devCost.toFixed(2)}</strong>
                             <div class="cost-breakdown">${costBreakdownHtml}</div>
                         </td>
-                        <td>${new Date(book.launchDate).toLocaleDateString()}</td>
+                        <td>${book.launchDate ? new Date(book.launchDate).toLocaleDateString() : 'TBD'}</td>
                         <td class="${profitClass}">$${book.cumulativeProfit.toFixed(2)}</td>
                         <td>${status}</td>
                         <td class="estimated-timeline">${estimatePayoffQuarters(book)}</td>
