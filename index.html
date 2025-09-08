@@ -132,16 +132,9 @@
         
         .input-group {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: 2fr 1fr 1.5fr 1fr 1fr;
             gap: 15px;
             margin-bottom: 20px;
-        }
-        
-        .cost-breakdown-group {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 10px;
-            align-items: end;
         }
         
         label {
@@ -243,11 +236,12 @@
             display: none !important;
         }
         
-        .edit-btn, .save-btn, .cancel-btn {
+        .edit-btn, .save-btn, .cancel-btn, .delete-btn {
             padding: 5px 10px;
             font-size: 12px;
             margin-right: 5px;
-            width: auto;
+            width: 60px;
+            text-align: center;
         }
         
         .edit-btn {
@@ -282,6 +276,35 @@
             border: 1px solid #667eea;
             border-radius: 4px;
             font-size: 12px;
+        }
+        
+        .cost-row {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 5px;
+            align-items: center;
+        }
+        
+        .add-cost-btn {
+            background: #38a169;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            width: auto;
+        }
+        
+        .remove-cost-btn {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+            width: auto;
         }
     </style>
 </head>
@@ -379,7 +402,7 @@
                     <strong>How it works:</strong> Add quarterly profit updates until cumulative profit ≥ development cost. 
                     The system calculates estimated payoff timeline based on your average quarterly performance.
                     <br><strong>☁️ Cloud Sync:</strong> Your data is automatically saved to your Google account and synced across all devices!
-                    <br><strong>✏️ Editing:</strong> Click "Edit" on any book to modify its details!
+                    <br><strong>✏️ Editing:</strong> Click "Edit" on any book to modify its details and add/edit development costs!
                 </div>
             </div>
             
@@ -482,6 +505,7 @@
         let books = [];
         let paidOffBooks = [];
         let editingBookId = null;
+        let editingCosts = [];
 
         // Make functions globally available
         window.signInWithGoogle = signInWithGoogle;
@@ -492,6 +516,8 @@
         window.editBook = editBook;
         window.saveBookEdit = saveBookEdit;
         window.cancelBookEdit = cancelBookEdit;
+        window.addCostRow = addCostRow;
+        window.removeCostRow = removeCostRow;
         window.exportData = exportData;
         window.importData = importData;
         window.clearAllData = clearAllData;
@@ -597,7 +623,7 @@
                 return;
             }
 
-            const title = document.getElementById('bookTitle').value;
+            const title = document.getElementById('bookTitle').value.trim();
             const devCost = parseFloat(document.getElementById('devCost').value);
             const costCategory = document.getElementById('costCategory').value;
             const launchDate = document.getElementById('launchDate').value;
@@ -616,7 +642,10 @@
                     id: Date.now(),
                     title,
                     devCost,
-                    costCategory: costCategory || 'Unspecified',
+                    costBreakdown: [{
+                        category: costCategory || 'Unspecified',
+                        amount: devCost
+                    }],
                     launchDate,
                     quarterlyUpdates: [],
                     cumulativeProfit: 0,
@@ -627,8 +656,9 @@
                 books.push(newBook);
                 clearInputs();
                 renderTables();
-                alert('Book added successfully!');
+                alert('Book added successfully! Use "Edit" to add more development costs.');
             } catch (error) {
+                console.error('Error adding book:', error);
                 alert('Failed to add book. Please try again.');
             } finally {
                 addBookBtn.disabled = false;
@@ -638,7 +668,37 @@
 
         async function editBook(bookId) {
             editingBookId = bookId;
+            const book = books.find(b => b.id === bookId);
+            
+            // Initialize editing costs with current breakdown
+            if (book.costBreakdown) {
+                editingCosts = [...book.costBreakdown];
+            } else {
+                // Convert old format
+                editingCosts = [{
+                    category: book.costCategory || 'Unspecified',
+                    amount: book.devCost
+                }];
+            }
+            
             renderTables();
+        }
+
+        function addCostRow() {
+            editingCosts.push({
+                category: 'Other',
+                amount: 0
+            });
+            renderTables();
+        }
+
+        function removeCostRow(index) {
+            if (editingCosts.length > 1) {
+                editingCosts.splice(index, 1);
+                renderTables();
+            } else {
+                alert('A book must have at least one cost entry.');
+            }
         }
 
         async function saveBookEdit(bookId) {
@@ -647,37 +707,58 @@
 
             const row = document.querySelector(`tr[data-book-id="${bookId}"]`);
             const titleInput = row.querySelector('.edit-title');
-            const costInput = row.querySelector('.edit-cost');
-            const categorySelect = row.querySelector('.edit-category');
             const dateInput = row.querySelector('.edit-date');
+            const costInputs = row.querySelectorAll('.edit-cost-amount');
+            const categorySelects = row.querySelectorAll('.edit-cost-category');
 
             const newTitle = titleInput.value.trim();
-            const newCost = parseFloat(costInput.value);
-            const newCategory = categorySelect.value;
             const newDate = dateInput.value;
 
-            if (!newTitle || isNaN(newCost) || !newDate) {
-                alert('Please fill in all required fields');
+            if (!newTitle || !newDate) {
+                alert('Please fill in title and release date');
                 return;
+            }
+
+            // Validate and collect cost data
+            const newCostBreakdown = [];
+            let totalCost = 0;
+
+            for (let i = 0; i < costInputs.length; i++) {
+                const amount = parseFloat(costInputs[i].value);
+                const category = categorySelects[i].value;
+
+                if (isNaN(amount) || amount <= 0) {
+                    alert(`Please enter a valid amount for cost #${i + 1}`);
+                    return;
+                }
+
+                newCostBreakdown.push({
+                    category: category || 'Unspecified',
+                    amount: amount
+                });
+                totalCost += amount;
             }
 
             try {
                 book.title = newTitle;
-                book.devCost = newCost;
-                book.costCategory = newCategory || 'Unspecified';
                 book.launchDate = newDate;
+                book.costBreakdown = newCostBreakdown;
+                book.devCost = totalCost;
 
                 await saveBookToFirebase(book);
                 editingBookId = null;
+                editingCosts = [];
                 renderTables();
-                alert('Book updated successfully!');
+                alert(`Book updated successfully! Total development cost: $${totalCost.toFixed(2)}`);
             } catch (error) {
+                console.error('Error updating book:', error);
                 alert('Failed to update book. Please try again.');
             }
         }
 
         function cancelBookEdit() {
             editingBookId = null;
+            editingCosts = [];
             renderTables();
         }
 
@@ -809,26 +890,43 @@
 
                 if (editingBookId === book.id) {
                     row.classList.add('edit-row');
+                    
+                    // Create editable cost breakdown
+                    let costsHtml = '';
+                    editingCosts.forEach((cost, index) => {
+                        costsHtml += `
+                            <div class="cost-row">
+                                <select class="edit-input edit-cost-category" style="flex: 1;">
+                                    <option value="Cover Design" ${cost.category === 'Cover Design' ? 'selected' : ''}>Cover Design</option>
+                                    <option value="Editing" ${cost.category === 'Editing' ? 'selected' : ''}>Editing</option>
+                                    <option value="Formatting" ${cost.category === 'Formatting' ? 'selected' : ''}>Formatting</option>
+                                    <option value="Marketing" ${cost.category === 'Marketing' ? 'selected' : ''}>Marketing</option>
+                                    <option value="Printing" ${cost.category === 'Printing' ? 'selected' : ''}>Printing</option>
+                                    <option value="ISBN/Copyright" ${cost.category === 'ISBN/Copyright' ? 'selected' : ''}>ISBN/Copyright</option>
+                                    <option value="Illustration" ${cost.category === 'Illustration' ? 'selected' : ''}>Illustration</option>
+                                    <option value="Translation" ${cost.category === 'Translation' ? 'selected' : ''}>Translation</option>
+                                    <option value="Software/Tools" ${cost.category === 'Software/Tools' ? 'selected' : ''}>Software/Tools</option>
+                                    <option value="Other" ${cost.category === 'Other' ? 'selected' : ''}>Other</option>
+                                    <option value="Unspecified" ${cost.category === 'Unspecified' ? 'selected' : ''}>Unspecified</option>
+                                </select>
+                                <input type="number" class="edit-input edit-cost-amount" value="${cost.amount}" step="0.01" style="width: 80px;">
+                                ${editingCosts.length > 1 ? `<button onclick="removeCostRow(${index})" class="remove-cost-btn">×</button>` : ''}
+                            </div>
+                        `;
+                    });
+                    
+                    const totalCost = editingCosts.reduce((sum, cost) => sum + cost.amount, 0);
+                    
                     row.innerHTML = `
                         <td>
                             <input type="text" class="edit-input edit-title" value="${book.title}">
                         </td>
                         <td>
-                            <input type="number" class="edit-input edit-cost" value="${book.devCost}" step="0.01">
-                            <br><br>
-                            <select class="edit-input edit-category">
-                                <option value="">Select category...</option>
-                                <option value="Cover Design" ${book.costCategory === 'Cover Design' ? 'selected' : ''}>Cover Design</option>
-                                <option value="Editing" ${book.costCategory === 'Editing' ? 'selected' : ''}>Editing</option>
-                                <option value="Formatting" ${book.costCategory === 'Formatting' ? 'selected' : ''}>Formatting</option>
-                                <option value="Marketing" ${book.costCategory === 'Marketing' ? 'selected' : ''}>Marketing</option>
-                                <option value="Printing" ${book.costCategory === 'Printing' ? 'selected' : ''}>Printing</option>
-                                <option value="ISBN/Copyright" ${book.costCategory === 'ISBN/Copyright' ? 'selected' : ''}>ISBN/Copyright</option>
-                                <option value="Illustration" ${book.costCategory === 'Illustration' ? 'selected' : ''}>Illustration</option>
-                                <option value="Translation" ${book.costCategory === 'Translation' ? 'selected' : ''}>Translation</option>
-                                <option value="Software/Tools" ${book.costCategory === 'Software/Tools' ? 'selected' : ''}>Software/Tools</option>
-                                <option value="Other" ${book.costCategory === 'Other' ? 'selected' : ''}>Other</option>
-                            </select>
+                            <div style="margin-bottom: 10px;">
+                                <strong>Total: $${totalCost.toFixed(2)}</strong>
+                                <button onclick="addCostRow()" class="add-cost-btn">+ Add Cost</button>
+                            </div>
+                            ${costsHtml}
                         </td>
                         <td>
                             <input type="date" class="edit-input edit-date" value="${book.launchDate}">
@@ -842,11 +940,16 @@
                         </td>
                     `;
                 } else {
+                    // Create cost breakdown display
+                    const costBreakdownHtml = book.costBreakdown ? 
+                        book.costBreakdown.map(cost => `${cost.category}: $${cost.amount.toFixed(2)}`).join('<br>') :
+                        (book.costCategory || 'Unspecified');
+                    
                     row.innerHTML = `
                         <td><strong>${book.title}</strong></td>
                         <td>
-                            $${book.devCost.toFixed(2)}
-                            <div class="cost-breakdown">${book.costCategory || 'Unspecified'}</div>
+                            <strong>$${book.devCost.toFixed(2)}</strong>
+                            <div class="cost-breakdown">${costBreakdownHtml}</div>
                         </td>
                         <td>${new Date(book.launchDate).toLocaleDateString()}</td>
                         <td class="${profitClass}">$${book.cumulativeProfit.toFixed(2)}</td>
@@ -870,17 +973,17 @@
                 
                 // Create cost breakdown display for paid off books
                 const costBreakdownHtml = book.costBreakdown ? 
-                    book.costBreakdown.map(cost => `${cost.category}: ${cost.amount.toFixed(2)}`).join('<br>') :
+                    book.costBreakdown.map(cost => `${cost.category}: $${cost.amount.toFixed(2)}`).join('<br>') :
                     (book.costCategory || 'Unspecified');
                 
                 row.innerHTML = `
                     <td><strong>${book.title}</strong></td>
                     <td>
-                        <strong>${book.devCost.toFixed(2)}</strong>
+                        <strong>$${book.devCost.toFixed(2)}</strong>
                         <div class="cost-breakdown">${costBreakdownHtml}</div>
                     </td>
                     <td>${book.monthsToPayoff} months</td>
-                    <td class="profit-positive">${book.finalProfit.toFixed(2)}</td>
+                    <td class="profit-positive">$${book.finalProfit.toFixed(2)}</td>
                     <td>${new Date(book.launchDate).toLocaleDateString()}</td>
                     <td>${new Date(book.payoffDate).toLocaleDateString()}</td>
                 `;
@@ -905,7 +1008,7 @@
                 paidOffBooks: paidOffBooks,
                 exportDate: new Date().toISOString(),
                 userEmail: currentUser?.email,
-                version: "2.1"
+                version: "2.2"
             };
 
             const dataStr = JSON.stringify(dataToExport, null, 2);
