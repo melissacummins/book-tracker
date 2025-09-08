@@ -867,14 +867,20 @@
 
             paidOffBooks.forEach(book => {
                 const row = document.createElement('tr');
+                
+                // Create cost breakdown display for paid off books
+                const costBreakdownHtml = book.costBreakdown ? 
+                    book.costBreakdown.map(cost => `${cost.category}: ${cost.amount.toFixed(2)}`).join('<br>') :
+                    (book.costCategory || 'Unspecified');
+                
                 row.innerHTML = `
                     <td><strong>${book.title}</strong></td>
                     <td>
-                        $${book.devCost.toFixed(2)}
-                        <div class="cost-breakdown">${book.costCategory || 'Unspecified'}</div>
+                        <strong>${book.devCost.toFixed(2)}</strong>
+                        <div class="cost-breakdown">${costBreakdownHtml}</div>
                     </td>
                     <td>${book.monthsToPayoff} months</td>
-                    <td class="profit-positive">$${book.finalProfit.toFixed(2)}</td>
+                    <td class="profit-positive">${book.finalProfit.toFixed(2)}</td>
                     <td>${new Date(book.launchDate).toLocaleDateString()}</td>
                     <td>${new Date(book.payoffDate).toLocaleDateString()}</td>
                 `;
