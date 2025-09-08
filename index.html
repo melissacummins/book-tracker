@@ -295,7 +295,6 @@
             font-size: 11px;
             cursor: pointer;
             width: auto;
-            margin-left: 10px;
         }
         
         .remove-cost-btn {
@@ -418,7 +417,6 @@
                             <th>Book Title</th>
                             <th>Dev Cost & Category</th>
                             <th>Months to Payoff</th>
-                            <th>Final Profit at Payoff</th>
                             <th>Release Date</th>
                             <th>Payoff Date</th>
                             <th>Actions</th>
@@ -530,6 +528,7 @@
         window.addPaidOffCostRow = addPaidOffCostRow;
         window.removePaidOffCostRow = removePaidOffCostRow;
         window.updatePaidOffTotalDisplay = updatePaidOffTotalDisplay;
+        window.updateMonthsToPayoff = updateMonthsToPayoff;
         window.exportData = exportData;
         window.importData = importData;
         window.clearAllData = clearAllData;
@@ -673,6 +672,32 @@
             
             const quartersRemaining = Math.ceil(remaining / avgQuarterlyProfit);
             return `~${quartersRemaining} quarters`;
+        }
+
+        function updateMonthsToPayoff(bookId) {
+            const book = paidOffBooks.find(b => b.id === bookId);
+            if (!book) return;
+
+            const row = document.querySelector(`tr[data-paid-off-book-id="${bookId}"]`);
+            if (!row) return;
+
+            const launchDateInput = row.querySelector('.edit-paid-off-launch-date');
+            const payoffDateInput = row.querySelector('.edit-paid-off-payoff-date');
+            const monthsInput = row.querySelector('.edit-paid-off-months');
+
+            const launchDate = launchDateInput.value;
+            const payoffDate = payoffDateInput.value;
+
+            if (launchDate && payoffDate) {
+                const launch = new Date(launchDate);
+                const payoff = new Date(payoffDate);
+                
+                const diffInMonths = (payoff.getFullYear() - launch.getFullYear()) * 12 + 
+                                   (payoff.getMonth() - launch.getMonth());
+                
+                const months = Math.max(0, diffInMonths);
+                monthsInput.value = months;
+            }
         }
 
         // App functions
@@ -949,7 +974,6 @@
             const row = document.querySelector(`tr[data-paid-off-book-id="${bookId}"]`);
             const titleInput = row.querySelector('.edit-paid-off-title');
             const monthsInput = row.querySelector('.edit-paid-off-months');
-            const profitInput = row.querySelector('.edit-paid-off-profit');
             const launchDateInput = row.querySelector('.edit-paid-off-launch-date');
             const payoffDateInput = row.querySelector('.edit-paid-off-payoff-date');
             const costInputs = row.querySelectorAll('.edit-paid-off-cost-amount');
@@ -957,7 +981,6 @@
 
             const newTitle = titleInput.value.trim();
             const newMonths = parseInt(monthsInput.value);
-            const newProfit = parseFloat(profitInput.value);
             const newLaunchDate = launchDateInput.value;
             const newPayoffDate = payoffDateInput.value;
 
@@ -989,7 +1012,6 @@
             try {
                 book.title = newTitle;
                 book.monthsToPayoff = isNaN(newMonths) ? 0 : newMonths;
-                book.finalProfit = isNaN(newProfit) ? 0 : newProfit;
                 book.launchDate = newLaunchDate || null;
                 book.payoffDate = newPayoffDate ? new Date(newPayoffDate).toISOString() : book.payoffDate;
                 book.costBreakdown = newCostBreakdown;
@@ -1154,7 +1176,7 @@
                             <input type="text" class="edit-input edit-title" value="${book.title}">
                         </td>
                         <td>
-                            <div style="margin-bottom: 10px;">
+                            <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
                                 <strong id="editingTotal">Total: $${totalCost.toFixed(2)}</strong>
                                 <button onclick="addCostRow()" class="add-cost-btn">+ Add Cost</button>
                             </div>
@@ -1238,23 +1260,20 @@
                             <input type="text" class="edit-input edit-paid-off-title" value="${book.title}">
                         </td>
                         <td>
-                            <div style="margin-bottom: 10px;">
+                            <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
                                 <strong id="editingPaidOffTotal">Total: $${totalCost.toFixed(2)}</strong>
                                 <button onclick="addPaidOffCostRow()" class="add-cost-btn">+ Add Cost</button>
                             </div>
                             ${costsHtml}
                         </td>
                         <td>
-                            <input type="number" class="edit-input edit-paid-off-months" value="${book.monthsToPayoff}" min="0">
-                        </td>
-                        <td>
-                            <input type="number" class="edit-input edit-paid-off-profit" value="${book.finalProfit}" step="0.01">
+                            <input type="number" class="edit-input edit-paid-off-months" value="${book.monthsToPayoff}" min="0" readonly style="background: #f8f9fa;">
                         </td>
                         <td>
                             <input type="date" class="edit-input edit-paid-off-launch-date" value="${book.launchDate || ''}">
                         </td>
                         <td>
-                            <input type="date" class="edit-input edit-paid-off-payoff-date" value="${book.payoffDate ? book.payoffDate.split('T')[0] : ''}">
+                            <input type="date" class="edit-input edit-paid-off-payoff-date" value="${book.payoffDate ? book.payoffDate.split('T')[0] : ''}" onchange="updateMonthsToPayoff(${book.id})">
                         </td>
                         <td>
                             <button onclick="savePaidOffBookEdit(${book.id})" class="save-btn">Save</button>
@@ -1274,7 +1293,6 @@
                             <div class="cost-breakdown">${costBreakdownHtml}</div>
                         </td>
                         <td>${book.monthsToPayoff} months</td>
-                        <td class="profit-positive">$${book.finalProfit.toFixed(2)}</td>
                         <td>${book.launchDate ? new Date(book.launchDate).toLocaleDateString() : 'TBD'}</td>
                         <td>${new Date(book.payoffDate).toLocaleDateString()}</td>
                         <td>
@@ -1306,7 +1324,7 @@
                 paidOffBooks: paidOffBooks,
                 exportDate: new Date().toISOString(),
                 userEmail: currentUser?.email,
-                version: "3.0"
+                version: "3.1"
             };
 
             const dataStr = JSON.stringify(dataToExport, null, 2);
