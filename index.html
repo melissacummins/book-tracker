@@ -1285,14 +1285,17 @@
                 paidOffTableBody.appendChild(row);
             });
 
-            // Update book select dropdown
+            // Update book select dropdown - only show books that aren't paid off
             const updateBookSelect = document.getElementById('updateBookSelect');
             updateBookSelect.innerHTML = '<option value="">Select Book to Update</option>';
             books.forEach(book => {
-                const option = document.createElement('option');
-                option.value = book.id;
-                option.textContent = book.title;
-                updateBookSelect.appendChild(option);
+                // Only add books that still have remaining costs to pay off
+                if (book.cumulativeProfit < book.devCost) {
+                    const option = document.createElement('option');
+                    option.value = book.id;
+                    option.textContent = book.title;
+                    updateBookSelect.appendChild(option);
+                }
             });
         }
 
