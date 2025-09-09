@@ -132,7 +132,7 @@
         
         .input-group {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            grid-template-columns: 2fr 1fr 1.5fr 1fr 1fr;
             gap: 15px;
             margin-bottom: 20px;
         }
@@ -294,8 +294,7 @@
         .cost-header {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
+            gap: 10px;
         }
         
         .cost-row {
@@ -364,7 +363,7 @@
             </button>
         </div>
 
-        <!-- User Info Section (shown when logged in) -->
+        <!-- User Info Section -->
         <div id="userSection" class="hidden">
             <div class="user-info">
                 <div class="user-details">
@@ -378,14 +377,14 @@
             </div>
         </div>
 
-        <!-- Main App Content (shown when logged in) -->
+        <!-- Main App Content -->
         <div id="appContent" class="hidden">
             
-            <!-- How it Works Section - Now First -->
+            <!-- How it Works Section -->
             <div class="section">
                 <h2>📖 How it Works</h2>
                 <div class="formula-explanation">
-                    <strong>Step 1:</strong> Add books with just a title (costs and dates are optional)<br>
+                    <strong>Step 1:</strong> Add books with title (cost and release date optional)<br>
                     <strong>Step 2:</strong> Use "Edit" to add development costs (editing, cover design, etc.)<br>
                     <strong>Step 3:</strong> Add quarterly profit updates until cumulative profit ≥ development cost<br>
                     <strong>Step 4:</strong> Books automatically move to "Paid Off" when profitable<br><br>
@@ -400,7 +399,7 @@
                 
                 <div class="input-group">
                     <div>
-                        <label for="bookTitle">Book Title (Required)</label>
+                        <label for="bookTitle">Book Title</label>
                         <input type="text" id="bookTitle" placeholder="Enter book title">
                     </div>
                     <div>
@@ -424,7 +423,7 @@
                         </select>
                     </div>
                     <div>
-                        <label for="launchDate">Release Date (Optional)</label>
+                        <label for="launchDate">Release Date</label>
                         <input type="text" id="launchDate" placeholder="2025-03-15, 03/15/2025, March 15, 2025">
                     </div>
                     <div>
@@ -476,8 +475,7 @@
                 </div>
                 
                 <div class="formula-explanation">
-                    <strong>Tip:</strong> Once a book is paid off, it automatically moves to the "Paid Off" section. If you edit a paid off book and increase costs, it will move back here for continued tracking.<br>
-                    <strong>Date Format:</strong> You can enter dates in multiple formats: "2025-03-15" (ISO), "03/15/2025" (US), "March 15, 2025" (natural), or "Q1 2025" for quarters.
+                    <strong>Tip:</strong> Once a book is paid off, it automatically moves to the "Paid Off" section. If you edit a paid off book and increase costs, it will move back here for continued tracking.
                 </div>
             </div>
             
@@ -682,32 +680,13 @@
             // Try multiple date parsing approaches
             let dateAttempt;
             
-            // First try direct parsing
-            dateAttempt = new Date(trimmedInput);
-            if (!isNaN(dateAttempt.getTime()) && dateAttempt.getFullYear() > 1900) {
-                return dateAttempt;
-            }
-            
-            // Try parsing MM/DD/YYYY format specifically
+            // Try parsing MM/DD/YYYY format specifically first
             const mmddyyyyMatch = trimmedInput.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
             if (mmddyyyyMatch) {
                 const [, month, day, year] = mmddyyyyMatch;
                 dateAttempt = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
                 if (!isNaN(dateAttempt.getTime())) {
                     return dateAttempt;
-                }
-            }
-            
-            // Try parsing DD/MM/YYYY format
-            const ddmmyyyyMatch = trimmedInput.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-            if (ddmmyyyyMatch) {
-                const [, day, month, year] = ddmmyyyyMatch;
-                // If day > 12, assume it's DD/MM/YYYY format
-                if (parseInt(day) > 12) {
-                    dateAttempt = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                    if (!isNaN(dateAttempt.getTime())) {
-                        return dateAttempt;
-                    }
                 }
             }
             
@@ -721,7 +700,12 @@
                 }
             }
             
-            // If all parsing fails, return null (don't default to today)
+            // Try direct parsing for natural language dates
+            dateAttempt = new Date(trimmedInput);
+            if (!isNaN(dateAttempt.getTime()) && dateAttempt.getFullYear() > 1900) {
+                return new Date(dateAttempt.getFullYear(), dateAttempt.getMonth(), dateAttempt.getDate());
+            }
+            
             return null;
         }
 
@@ -740,8 +724,11 @@
             const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
             if (isNaN(date.getTime())) return '';
             
-            // Return in ISO format for consistency
-            return date.toISOString().split('T')[0];
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}`;
         }
 
         function parseQuarterOrDateToDate(input) {
@@ -751,34 +738,25 @@
                 const quarterNum = parseInt(quarterMatch[1]);
                 const year = parseInt(quarterMatch[2]);
                 
-                // Map quarters to months (using end of quarter)
                 const quarterEndMonths = {
-                    1: 2,  // Q1 ends in March (month 2, 0-indexed)
-                    2: 5,  // Q2 ends in June (month 5)
-                    3: 8,  // Q3 ends in September (month 8)
-                    4: 11  // Q4 ends in December (month 11)
+                    1: 2,  // Q1 ends in March
+                    2: 5,  // Q2 ends in June
+                    3: 8,  // Q3 ends in September
+                    4: 11  // Q4 ends in December
                 };
                 
-                // Use last day of the quarter
                 const month = quarterEndMonths[quarterNum];
-                const lastDay = new Date(year, month + 1, 0).getDate(); // Get last day of month
+                const lastDay = new Date(year, month + 1, 0).getDate();
                 
                 return new Date(year, month, lastDay);
             }
             
-            // Try to parse as a date format using flexible parsing
             const dateAttempt = parseFlexibleDate(input);
             if (dateAttempt) {
                 return dateAttempt;
             }
             
-            // Fallback to current date if format is unrecognized
             return new Date();
-        }
-
-        function parseQuarterToDate(quarter) {
-            // Legacy function - now just calls the new combined function
-            return parseQuarterOrDateToDate(quarter);
         }
 
         function calculateMonthsToPayoff(book, payoffDate = null) {
@@ -890,11 +868,9 @@
             editingBookId = bookId;
             const book = books.find(b => b.id === bookId);
             
-            // Initialize editing costs with current breakdown
             if (book.costBreakdown && book.costBreakdown.length > 0) {
                 editingCosts = [...book.costBreakdown];
             } else {
-                // Convert old format or create empty cost if none exists
                 editingCosts = book.devCost > 0 ? [{
                     category: book.costCategory || 'Unspecified',
                     amount: book.devCost
@@ -908,7 +884,6 @@
         }
 
         function addCostRow() {
-            // Capture current values before adding new row
             updateEditingCostsFromDOM();
             
             editingCosts.push({
@@ -920,7 +895,6 @@
 
         function removeCostRow(index) {
             if (editingCosts.length > 1) {
-                // Capture current values before removing row
                 updateEditingCostsFromDOM();
                 
                 editingCosts.splice(index, 1);
@@ -939,13 +913,11 @@
             const costInputs = row.querySelectorAll('.edit-cost-amount');
             const categorySelects = row.querySelectorAll('.edit-cost-category');
             
-            // Update editingCosts with current DOM values
             for (let i = 0; i < Math.min(costInputs.length, editingCosts.length); i++) {
                 editingCosts[i].amount = parseFloat(costInputs[i].value) || 0;
                 editingCosts[i].category = categorySelects[i].value || 'Unspecified';
             }
             
-            // Also capture the release date to prevent it from being wiped
             const dateInput = row.querySelector('.edit-date');
             if (dateInput) {
                 editingCosts._tempReleaseDate = dateInput.value;
@@ -990,7 +962,6 @@
                 return;
             }
 
-            // Validate and collect cost data
             const newCostBreakdown = [];
             let totalCost = 0;
 
@@ -1042,11 +1013,9 @@
             editingPaidOffBookId = bookId;
             const book = paidOffBooks.find(b => b.id === bookId);
             
-            // Initialize editing costs with current breakdown
             if (book.costBreakdown && book.costBreakdown.length > 0) {
                 editingPaidOffCosts = [...book.costBreakdown];
             } else {
-                // Convert old format
                 editingPaidOffCosts = [{
                     category: book.costCategory || 'Unspecified',
                     amount: book.devCost || 0
@@ -1057,7 +1026,6 @@
         }
 
         function addPaidOffCostRow() {
-            // Capture current values before adding new row
             updatePaidOffEditingCostsFromDOM();
             
             editingPaidOffCosts.push({
@@ -1069,7 +1037,6 @@
 
         function removePaidOffCostRow(index) {
             if (editingPaidOffCosts.length > 1) {
-                // Capture current values before removing row
                 updatePaidOffEditingCostsFromDOM();
                 
                 editingPaidOffCosts.splice(index, 1);
@@ -1088,7 +1055,6 @@
             const costInputs = row.querySelectorAll('.edit-paid-off-cost-amount');
             const categorySelects = row.querySelectorAll('.edit-paid-off-cost-category');
             
-            // Update editingPaidOffCosts with current DOM values
             for (let i = 0; i < Math.min(costInputs.length, editingPaidOffCosts.length); i++) {
                 editingPaidOffCosts[i].amount = parseFloat(costInputs[i].value) || 0;
                 editingPaidOffCosts[i].category = categorySelects[i].value || 'Unspecified';
@@ -1137,7 +1103,6 @@
                 return;
             }
 
-            // Validate and collect cost data
             const newCostBreakdown = [];
             let totalCost = 0;
 
@@ -1170,9 +1135,7 @@
                 book.costBreakdown = newCostBreakdown;
                 book.devCost = totalCost;
 
-                // Check if book is no longer paid off due to increased costs
                 if (book.cumulativeProfit < totalCost) {
-                    // Move back to active books
                     const activeBook = {
                         id: book.id,
                         title: book.title,
@@ -1242,7 +1205,6 @@
 
                 books[bookIndex].cumulativeProfit += profit;
 
-                // Check if book is now paid off
                 if (books[bookIndex].cumulativeProfit >= books[bookIndex].devCost && books[bookIndex].devCost > 0) {
                     const payoffDate = parseQuarterOrDateToDate(quarter);
                     
@@ -1265,7 +1227,6 @@
                     await saveBookToFirebase(books[bookIndex]);
                 }
 
-                // Clear inputs and refresh
                 document.getElementById('updateBookSelect').value = '';
                 document.getElementById('quarterlyProfit').value = '';
                 document.getElementById('quarterYear').value = '';
@@ -1317,7 +1278,6 @@
         }
 
         function renderTables() {
-            // Show/hide loading states
             document.getElementById('loadingActive').classList.add('hidden');
             document.getElementById('loadingPaidOff').classList.add('hidden');
             document.getElementById('activeTracking').classList.remove('hidden');
@@ -1339,10 +1299,8 @@
                 if (editingBookId === book.id) {
                     row.classList.add('edit-row');
                     
-                    // Restore the release date if it was temporarily saved
                     const savedReleaseDate = editingCosts._tempReleaseDate || (book.launchDate ? formatDateForInput(book.launchDate) : '');
                     
-                    // Create editable cost breakdown with real-time total update
                     let costsHtml = '';
                     editingCosts.forEach((cost, index) => {
                         costsHtml += `
@@ -1393,7 +1351,6 @@
                         </td>
                     `;
                 } else {
-                    // Create cost breakdown display
                     const costBreakdownHtml = book.costBreakdown && book.costBreakdown.length > 0 ? 
                         book.costBreakdown.map(cost => `${cost.category}: $${cost.amount.toFixed(2)}`).join('<br>') :
                         (book.devCost > 0 ? (book.costCategory || 'Unspecified') : 'No costs added');
@@ -1428,7 +1385,6 @@
                 if (editingPaidOffBookId === book.id) {
                     row.classList.add('edit-row');
                     
-                    // Create editable cost breakdown for paid off books
                     let costsHtml = '';
                     editingPaidOffCosts.forEach((cost, index) => {
                         costsHtml += `
@@ -1471,7 +1427,7 @@
                             <input type="number" class="edit-input edit-paid-off-months" value="${book.monthsToPayoff}" min="0" readonly style="background: #f8f9fa;">
                         </td>
                         <td>
-                            <input type="text" class="edit-input edit-paid-off-launch-date" value="${formatDateForInput(book.launchDate)}" placeholder="2025-03-15, 03/15/2025, etc.">
+                            <input type="text" class="edit-input edit-paid-off-launch-date" value="${formatDateForInput(book.launchDate)}" placeholder="2025-03-15, 03/15/2025, etc." onchange="updateMonthsToPayoff(${book.id})">
                         </td>
                         <td>
                             <input type="text" class="edit-input edit-paid-off-payoff-date" value="${formatDateForInput(book.payoffDate)}" placeholder="2025-03-15, 03/15/2025, etc." onchange="updateMonthsToPayoff(${book.id})">
@@ -1482,15 +1438,14 @@
                         </td>
                     `;
                 } else {
-                    // Create cost breakdown display for paid off books
                     const costBreakdownHtml = book.costBreakdown && book.costBreakdown.length > 0 ? 
-                        book.costBreakdown.map(cost => `${cost.category}: ${cost.amount.toFixed(2)}`).join('<br>') :
+                        book.costBreakdown.map(cost => `${cost.category}: $${cost.amount.toFixed(2)}`).join('<br>') :
                         (book.costCategory || 'Unspecified');
                     
                     row.innerHTML = `
                         <td><strong>${book.title}</strong></td>
                         <td>
-                            <strong>${book.devCost.toFixed(2)}</strong>
+                            <strong>$${book.devCost.toFixed(2)}</strong>
                             <div class="cost-breakdown">${costBreakdownHtml}</div>
                         </td>
                         <td>${book.monthsToPayoff} months</td>
@@ -1505,11 +1460,10 @@
                 paidOffTableBody.appendChild(row);
             });
 
-            // Update book select dropdown - only show books that aren't paid off and have costs
+            // Update book select dropdown
             const updateBookSelect = document.getElementById('updateBookSelect');
             updateBookSelect.innerHTML = '<option value="">Select Book to Update</option>';
             books.forEach(book => {
-                // Only add books that still have remaining costs to pay off
                 if (book.devCost > 0 && book.cumulativeProfit < book.devCost) {
                     const option = document.createElement('option');
                     option.value = book.id;
@@ -1526,7 +1480,7 @@
                 paidOffBooks: paidOffBooks,
                 exportDate: new Date().toISOString(),
                 userEmail: currentUser?.email,
-                version: "5.0"
+                version: "5.1"
             };
 
             const dataStr = JSON.stringify(dataToExport, null, 2);
