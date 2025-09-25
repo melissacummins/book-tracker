@@ -164,7 +164,7 @@
         
         .post-header {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 2fr 80px;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 60px;
             gap: 10px;
             margin-bottom: 10px;
             font-weight: 600;
@@ -177,7 +177,7 @@
         
         .post-grid {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 2fr 80px;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 60px;
             gap: 10px;
             align-items: center;
             margin-bottom: 10px;
@@ -199,7 +199,7 @@
             display: flex;
             flex-direction: column;
             gap: 3px;
-            min-width: 80px;
+            min-width: 60px;
             justify-content: center;
             align-items: center;
         }
@@ -212,7 +212,7 @@
             cursor: pointer;
             font-weight: 600;
             text-align: center;
-            width: 60px;
+            width: 50px;
         }
         
         .edit-btn {
@@ -240,7 +240,7 @@
             cursor: pointer;
             font-weight: 600;
             text-align: center;
-            width: 60px;
+            width: 50px;
         }
         
         input, select, textarea {
@@ -683,6 +683,7 @@
             text-align: center;
         }
 
+        /* NEW: Followers column styling */
         .new-followers {
             font-weight: bold;
             text-align: center;
@@ -840,7 +841,7 @@
                                 <p>Copy and paste CSV text</p>
                             </div>
                             <div class="csv-method" onclick="switchCSVMethod('upload')" id="uploadMethod">
-                                <h4>🗂 Upload CSV File</h4>
+                                <h4>📁 Upload CSV File</h4>
                                 <p>Upload a .csv file from computer</p>
                             </div>
                         </div>
@@ -1012,10 +1013,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
         let currentEntryMethod = 'dashboard';
         let editingPostId = null;
         let csvInputMethod = 'paste';
-        let currentDataRange = null;
-        
-        // Store original data for safe edit/cancel
-        let originalPostData = {};
+        let currentDataRange = null; // NEW: Track currently loaded data range
         
         // Account management variables
         let currentAccountId = 'default';
@@ -1050,7 +1048,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
         } catch (error) {
             console.error('Firebase initialization error:', error);
             initializationError = error;
-            showError('Firebase initialization failed: ' + error.message);
+            showError(`Firebase initialization failed: ${error.message}`);
         }
 
         // Make functions available globally
@@ -1114,7 +1112,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                     });
                 } catch (error) {
                     console.error('Auth state listener error:', error);
-                    showError('Authentication setup failed: ' + error.message);
+                    showError(`Authentication setup failed: ${error.message}`);
                 }
             }
         });
@@ -1164,7 +1162,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                         errorMessage = 'Google Sign-In is not enabled. Please contact support.';
                         break;
                     default:
-                        errorMessage = 'Authentication failed: ' + error.message;
+                        errorMessage = `Authentication failed: ${error.message}`;
                         break;
                 }
                 
@@ -1197,7 +1195,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                 hideError();
             } catch (error) {
                 console.error('Sign out error:', error);
-                showError('Sign out failed: ' + error.message);
+                showError(`Sign out failed: ${error.message}`);
             }
         }
 
@@ -1232,10 +1230,10 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             document.getElementById('debugInfo').classList.add('hidden');
             
             checkApiKeyStatus();
-            loadUserAccounts();
+            loadUserAccounts(); // Load user's accounts
         }
 
-        // Data functions
+        // ENHANCED Data functions with improved date range handling
         async function loadUserData() {
             if (!currentUser || initializationError) return;
 
@@ -1251,21 +1249,23 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                     return;
                 }
                 
+                // First try to load data for the exact start date
                 let docRef = doc(db, 'users', currentUser.uid, 'accounts', currentAccountId, 'dateRanges', startDate);
                 let docSnap = await getDoc(docRef);
                 
                 if (docSnap.exists()) {
                     const rangeData = docSnap.data();
                     console.log('Loading data for account:', currentAccountId, 'range:', startDate, rangeData);
-                    currentDataRange = rangeData;
+                    currentDataRange = rangeData; // Store the loaded range
                     populateFormWithData(rangeData);
                     showDateRangeInfo(rangeData.startDate, rangeData.endDate);
                 } else {
+                    // If no exact match, search for any saved date range that overlaps with our selected dates
                     const foundData = await findDataInDateRange(startDate, endDate);
                     
                     if (foundData) {
                         console.log('Found overlapping data for account:', currentAccountId, foundData);
-                        currentDataRange = foundData;
+                        currentDataRange = foundData; // Store the loaded range
                         populateFormWithData(foundData);
                         showDateRangeInfo(foundData.startDate, foundData.endDate);
                     } else {
@@ -1273,6 +1273,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                         currentDataRange = null;
                         hideDateRangeInfo();
                         
+                        // If this is the default account and no data found, try to migrate old data
                         if (currentAccountId === 'default') {
                             const migrated = await migrateOldDataIfExists(startDate);
                             if (!migrated) {
@@ -1288,10 +1289,11 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             } catch (error) {
                 console.error('Error loading data:', error);
                 loadingIndicator.style.display = 'none';
-                showError('Failed to load data: ' + error.message);
+                showError(`Failed to load data: ${error.message}`);
             }
         }
 
+        // NEW: Function to find data within a date range
         async function findDataInDateRange(selectedStartDate, selectedEndDate) {
             try {
                 const dateRangesRef = collection(db, 'users', currentUser.uid, 'accounts', currentAccountId, 'dateRanges');
@@ -1305,6 +1307,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                     const dataStartDate = new Date(data.startDate);
                     const dataEndDate = new Date(data.endDate || data.startDate);
                     
+                    // Check if there's any overlap between the selected range and saved range
                     const hasOverlap = (selectedStart <= dataEndDate && selectedEnd >= dataStartDate);
                     
                     if (hasOverlap) {
@@ -1320,6 +1323,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             }
         }
 
+        // NEW: Show which date range data was found for
         function showDateRangeInfo(dataStartDate, dataEndDate) {
             const infoElement = document.getElementById('dateRangeInfo');
             const textElement = document.getElementById('dataRangeText');
@@ -1327,17 +1331,20 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             const startFormatted = new Date(dataStartDate).toLocaleDateString();
             const endFormatted = new Date(dataEndDate).toLocaleDateString();
             
-            textElement.textContent = 'Showing data from ' + startFormatted + ' to ' + endFormatted;
+            textElement.textContent = `Showing data from ${startFormatted} to ${endFormatted}`;
             infoElement.classList.remove('hidden');
         }
 
+        // NEW: Hide date range info
         function hideDateRangeInfo() {
             const infoElement = document.getElementById('dateRangeInfo');
             infoElement.classList.add('hidden');
         }
 
+        // Migration function to move old data to default account
         async function migrateOldDataIfExists(startDate) {
             try {
+                // Check if data exists in the old location
                 const oldDocRef = doc(db, 'users', currentUser.uid, 'dateRanges', startDate);
                 const oldDocSnap = await getDoc(oldDocRef);
                 
@@ -1345,31 +1352,35 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                     console.log('Found old data, migrating to default account...');
                     const oldData = oldDocSnap.data();
                     
+                    // Save to new location (default account)
                     const newDocRef = doc(db, 'users', currentUser.uid, 'accounts', 'default', 'dateRanges', startDate);
                     await setDoc(newDocRef, oldData);
                     
+                    // Delete from old location
                     await deleteDoc(oldDocRef);
                     
                     console.log('Migration completed for date:', startDate);
-                    currentDataRange = oldData;
+                    currentDataRange = oldData; // Store the loaded range
                     populateFormWithData(oldData);
                     showDateRangeInfo(oldData.startDate, oldData.endDate);
                     
+                    // Show migration notice
                     showMigrationNotice();
                     
-                    return true;
+                    return true; // Successfully migrated
                 }
             } catch (error) {
                 console.error('Migration error:', error);
             }
             
-            return false;
+            return false; // No migration performed
         }
 
         function showMigrationNotice() {
             const noticeElement = document.getElementById('migrationNotice');
             noticeElement.classList.remove('hidden');
             
+            // Auto-hide after 10 seconds
             setTimeout(() => {
                 noticeElement.classList.add('hidden');
             }, 10000);
@@ -1384,31 +1395,35 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                 }
                 updatePlatformSummary(platform);
             });
-            postCounter = 0;
+            postCounter = 0; // Reset counter when clearing
         }
 
+        // ENHANCED: Save data to the original date range, not the currently selected dates
         async function saveData() {
             if (!currentUser || initializationError) return;
 
             try {
                 const rangeData = collectCurrentRangeData();
                 
+                // Use the original data range if it exists, otherwise use selected dates
                 const saveStartDate = currentDataRange ? currentDataRange.startDate : document.getElementById('startDatePicker').value;
                 
                 if (!saveStartDate) return;
                 
                 console.log('Saving data for account:', currentAccountId, 'range:', saveStartDate, rangeData);
                 
+                // Save data for specific account using the original start date
                 const docRef = doc(db, 'users', currentUser.uid, 'accounts', currentAccountId, 'dateRanges', saveStartDate);
                 await setDoc(docRef, rangeData, { merge: true });
                 console.log('Data saved successfully');
             } catch (error) {
                 console.error('Error saving data:', error);
-                showError('Failed to save data: ' + error.message);
+                showError(`Failed to save data: ${error.message}`);
             }
         }
 
         function collectCurrentRangeData() {
+            // Use original range dates if available, otherwise use current picker values
             const startDate = currentDataRange ? currentDataRange.startDate : document.getElementById('startDatePicker').value;
             const endDate = currentDataRange ? currentDataRange.endDate : document.getElementById('endDatePicker').value;
             
@@ -1423,7 +1438,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                     analytics: parseFloat(document.getElementById('time-analytics')?.value) || 0
                 },
                 lastUpdated: new Date().toISOString(),
-                postCounter: postCounter
+                postCounter: postCounter // Save current post counter
             };
 
             const platforms = ['instagram', 'facebook', 'threads', 'tiktok', 'pinterest'];
@@ -1447,13 +1462,13 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                 const postId = post.dataset.postId;
                 postData.push({
                     id: postId,
-                    platform: platform,
+                    platform: platform, // Store platform with each post
                     description: post.querySelector('.post-description')?.value || '',
                     type: post.querySelector('.post-type')?.value || '',
                     views: parseInt(post.querySelector('.post-views')?.value) || 0,
                     likes: parseInt(post.querySelector('.post-likes')?.value) || 0,
                     comments: parseInt(post.querySelector('.post-comments')?.value) || 0,
-                    saves: parseInt(post.querySelector('.post-saves')?.value) || 0,
+                    saves: parseInt(post.querySelector('.post-saves')?.value) || 0, // NEW: Saves
                     shares: parseInt(post.querySelector('.post-shares')?.value) || 0,
                     newFollowers: parseInt(post.querySelector('.post-new-followers')?.value) || 0,
                     notes: post.querySelector('.post-notes')?.value || '',
@@ -1467,8 +1482,10 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
         function populateFormWithData(rangeData) {
             console.log('Populating form with data:', rangeData);
             
+            // Clear existing posts first
             clearAllPlatformPosts();
             
+            // Restore post counter
             if (rangeData.postCounter) {
                 postCounter = rangeData.postCounter;
             }
@@ -1483,6 +1500,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                     const container = document.getElementById(platform + '-posts');
                     if (container) {
                         rangeData.platforms[platform].posts.forEach((postData, index) => {
+                            // Add header for each post
                             const headerDiv = document.createElement('div');
                             headerDiv.className = 'post-header';
                             headerDiv.innerHTML = `
@@ -1495,11 +1513,11 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                                 <div>Shares</div>
                                 <div>New Followers</div>
                                 <div>Engagement</div>
-                                <div>Notes</div>
                                 <div>Actions</div>
                             `;
                             container.appendChild(headerDiv);
                             
+                            // Add the post
                             const postDiv = document.createElement('div');
                             postDiv.className = 'post-entry';
                             postDiv.dataset.postId = postData.id || postCounter++;
@@ -1514,9 +1532,10 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                             }, 100);
                         });
                         
+                        // Add the "Add Another Post" button and summary at the end
                         const addButton = document.createElement('div');
                         addButton.className = 'add-post-button';
-                        addButton.innerHTML = '<button onclick="addPost(\'' + platform + '\')" style="background: #38a169; margin: 20px 0;">+ Add Another Post</button>';
+                        addButton.innerHTML = `<button onclick="addPost('${platform}')" style="background: #38a169; margin: 20px 0;">+ Add Another Post</button>`;
                         container.appendChild(addButton);
                         
                         const summary = document.createElement('div');
@@ -1552,13 +1571,14 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             }
         }
 
-        // Date range functions
+        // Date range functions - ENHANCED with better feedback
         function updateDateRange() {
             const startDate = document.getElementById('startDatePicker').value;
             const endDate = document.getElementById('endDatePicker').value;
             
             if (!startDate) return;
             
+            // Auto-calculate end date if not provided (7 days from start)
             if (!endDate) {
                 const start = new Date(startDate);
                 const end = new Date(start);
@@ -1566,6 +1586,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                 document.getElementById('endDatePicker').value = end.toISOString().split('T')[0];
             }
             
+            // Load data for new date range
             if (currentUser && !initializationError) {
                 loadUserData();
             }
@@ -1574,10 +1595,10 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
         function setThisWeek() {
             const today = new Date();
             const monday = new Date(today);
-            monday.setDate(today.getDate() - today.getDay() + 1);
+            monday.setDate(today.getDate() - today.getDay() + 1); // Get Monday
             
             const sunday = new Date(monday);
-            sunday.setDate(monday.getDate() + 6);
+            sunday.setDate(monday.getDate() + 6); // Get Sunday
             
             document.getElementById('startDatePicker').value = monday.toISOString().split('T')[0];
             document.getElementById('endDatePicker').value = sunday.toISOString().split('T')[0];
@@ -1588,10 +1609,10 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
         function setLastWeek() {
             const today = new Date();
             const lastMonday = new Date(today);
-            lastMonday.setDate(today.getDate() - today.getDay() + 1 - 7);
+            lastMonday.setDate(today.getDate() - today.getDay() + 1 - 7); // Get last Monday
             
             const lastSunday = new Date(lastMonday);
-            lastSunday.setDate(lastMonday.getDate() + 6);
+            lastSunday.setDate(lastMonday.getDate() + 6); // Get last Sunday
             
             document.getElementById('startDatePicker').value = lastMonday.toISOString().split('T')[0];
             document.getElementById('endDatePicker').value = lastSunday.toISOString().split('T')[0];
@@ -1602,9 +1623,11 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
         function switchEntryMethod(method) {
             currentEntryMethod = method;
             
+            // Update active method styling
             document.querySelectorAll('.entry-method').forEach(el => el.classList.remove('active'));
             document.getElementById(method + 'Method').classList.add('active');
             
+            // Show/hide sections
             document.getElementById('dashboardSection').classList.toggle('hidden', method !== 'dashboard');
             document.getElementById('bulkSection').classList.toggle('hidden', method !== 'bulk');
             document.getElementById('aiSection').classList.toggle('hidden', method !== 'ai');
@@ -1613,9 +1636,11 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
         function switchCSVMethod(method) {
             csvInputMethod = method;
             
+            // Update active method styling
             document.querySelectorAll('.csv-method').forEach(el => el.classList.remove('active'));
             document.getElementById(method + 'Method').classList.add('active');
             
+            // Show/hide sections
             document.getElementById('pasteCSVSection').classList.toggle('hidden', method !== 'paste');
             document.getElementById('uploadCSVSection').classList.toggle('hidden', method !== 'upload');
         }
@@ -1659,6 +1684,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             header.classList.toggle('collapsed');
         }
 
+        // NEW: Function to update followers display with color coding
         function updateFollowersDisplay(element) {
             const value = parseInt(element.value) || 0;
             element.classList.remove('positive', 'zero', 'negative');
@@ -1672,10 +1698,12 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             }
         }
 
+        // UPDATED: Post management functions with Saves column included
         function addPost(platform) {
             postCounter++;
             const container = document.getElementById(platform + '-posts');
             
+            // Create header for this post (appears above each post)
             const headerDiv = document.createElement('div');
             headerDiv.className = 'post-header';
             headerDiv.innerHTML = `
@@ -1688,22 +1716,22 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                 <div>Shares</div>
                 <div>New Followers</div>
                 <div>Engagement</div>
-                <div>Notes</div>
                 <div>Actions</div>
             `;
             
             const postDiv = document.createElement('div');
             postDiv.className = 'post-entry editing';
             postDiv.dataset.postId = postCounter;
-            postDiv.dataset.platform = platform;
+            postDiv.dataset.platform = platform; // Store platform reference
             
+            // Platform-specific defaults
             const defaultData = {
                 description: '',
-                type: platform === 'tiktok' ? 'Video' : 'Post',
+                type: platform === 'tiktok' ? 'Video' : 'Post', // TikTok defaults to Video
                 views: '',
                 likes: '',
                 comments: '',
-                saves: '',
+                saves: '', // NEW: Default saves
                 shares: '',
                 newFollowers: '',
                 notes: ''
@@ -1711,13 +1739,14 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             
             postDiv.innerHTML = createPostHTML(postCounter, platform, defaultData, true);
             
+            // Find the add button and summary, or add them if they don't exist
             let addButton = container.querySelector('.add-post-button');
             let summary = container.querySelector('.platform-summary-section');
             
             if (!addButton) {
                 addButton = document.createElement('div');
                 addButton.className = 'add-post-button';
-                addButton.innerHTML = '<button onclick="addPost(\'' + platform + '\')" style="background: #38a169; margin: 20px 0;">+ Add Another Post</button>';
+                addButton.innerHTML = `<button onclick="addPost('${platform}')" style="background: #38a169; margin: 20px 0;">+ Add Another Post</button>`;
             }
             
             if (!summary) {
@@ -1731,6 +1760,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                 `;
             }
             
+            // Remove existing add button and summary
             if (container.querySelector('.add-post-button')) {
                 container.querySelector('.add-post-button').remove();
             }
@@ -1738,8 +1768,11 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                 container.querySelector('.platform-summary-section').remove();
             }
             
+            // Add header, then post
             container.appendChild(headerDiv);
             container.appendChild(postDiv);
+            
+            // Add the button after the post, then summary at the end
             container.appendChild(addButton);
             container.appendChild(summary);
             
@@ -1759,13 +1792,15 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
 
         function createPostHTML(postId, platform, data, isEditing) {
             const saveButton = isEditing ? 
-                '<button class="save-btn" onclick="event.stopPropagation(); savePost(\'' + platform + '\', ' + postId + ')">Save</button>' +
-                 '<button class="cancel-btn" onclick="event.stopPropagation(); cancelEdit(\'' + platform + '\', ' + postId + ')">Cancel</button>' :
-                '<button class="edit-btn" onclick="event.stopPropagation(); editPost(\'' + platform + '\', ' + postId + ')">Edit</button>' +
-                 '<button class="remove-btn" onclick="event.stopPropagation(); removePost(this)">Remove</button>';
+                `<button class="save-btn" onclick="event.stopPropagation(); savePost('${platform}', ${postId})">Save</button>
+                 <button class="cancel-btn" onclick="event.stopPropagation(); cancelEdit('${platform}', ${postId})">Cancel</button>` :
+                `<button class="edit-btn" onclick="event.stopPropagation(); editPost('${platform}', ${postId})">Edit</button>
+                 <button class="remove-btn" onclick="event.stopPropagation(); removePost(this)">Remove</button>`;
             
+            // Platform-specific defaults: TikTok is always Video, others default to Post
             const defaultType = data.type || (platform === 'tiktok' ? 'Video' : 'Post');
             
+            // Format new followers with styling
             const newFollowersValue = data.newFollowers || '';
             let followersClass = 'new-followers';
             if (newFollowersValue > 0) followersClass += ' positive';
@@ -1774,8 +1809,8 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             
             return `
                 <div class="post-grid">
-                    <input type="text" placeholder="Post description" class="post-description" value="${data.description || ''}" onchange="calculateEngagement(this); saveData()" ${!isEditing ? 'readonly' : ''}>
-                    <select class="post-type" onchange="saveData()" ${!isEditing ? 'disabled' : ''}>
+                    <input type="text" placeholder="Post description" class="post-description" value="${data.description || ''}" oninput="this.setAttribute('data-temp-value', this.value)" onchange="calculateEngagement(this); saveData()" ${!isEditing ? 'readonly' : ''}>
+                    <select class="post-type" onchange="this.setAttribute('data-temp-value', this.value); saveData()" ${!isEditing ? 'disabled' : ''}>
                         <option value="Post" ${defaultType === 'Post' ? 'selected' : ''}>Post</option>
                         <option value="Reel" ${defaultType === 'Reel' ? 'selected' : ''}>Reel</option>
                         <option value="Story" ${defaultType === 'Story' ? 'selected' : ''}>Story</option>
@@ -1785,68 +1820,106 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                         <option value="Tweet" ${defaultType === 'Tweet' ? 'selected' : ''}>Tweet</option>
                         <option value="Other" ${defaultType === 'Other' ? 'selected' : ''}>Other</option>
                     </select>
-                    <input type="number" placeholder="0" class="post-views" value="${data.views || ''}" onchange="calculateEngagement(this); saveData()" ${!isEditing ? 'readonly' : ''}>
-                    <input type="number" placeholder="0" class="post-likes" value="${data.likes || ''}" onchange="calculateEngagement(this); saveData()" ${!isEditing ? 'readonly' : ''}>
-                    <input type="number" placeholder="0" class="post-comments" value="${data.comments || ''}" onchange="calculateEngagement(this); saveData()" ${!isEditing ? 'readonly' : ''}>
-                    <input type="number" placeholder="0" class="post-saves" value="${data.saves || ''}" onchange="calculateEngagement(this); saveData()" ${!isEditing ? 'readonly' : ''}>
-                    <input type="number" placeholder="0" class="post-shares" value="${data.shares || ''}" onchange="calculateEngagement(this); saveData()" ${!isEditing ? 'readonly' : ''}>
-                    <input type="number" placeholder="0" class="post-new-followers ${followersClass}" value="${newFollowersValue}" onchange="updateFollowersDisplay(this); saveData()" ${!isEditing ? 'readonly' : ''}>
+                    <input type="number" placeholder="0" class="post-views" value="${data.views || ''}" oninput="this.setAttribute('data-temp-value', this.value)" onchange="calculateEngagement(this); saveData()" ${!isEditing ? 'readonly' : ''}>
+                    <input type="number" placeholder="0" class="post-likes" value="${data.likes || ''}" oninput="this.setAttribute('data-temp-value', this.value)" onchange="calculateEngagement(this); saveData()" ${!isEditing ? 'readonly' : ''}>
+                    <input type="number" placeholder="0" class="post-comments" value="${data.comments || ''}" oninput="this.setAttribute('data-temp-value', this.value)" onchange="calculateEngagement(this); saveData()" ${!isEditing ? 'readonly' : ''}>
+                    <input type="number" placeholder="0" class="post-saves" value="${data.saves || ''}" oninput="this.setAttribute('data-temp-value', this.value)" onchange="calculateEngagement(this); saveData()" ${!isEditing ? 'readonly' : ''}>
+                    <input type="number" placeholder="0" class="post-shares" value="${data.shares || ''}" oninput="this.setAttribute('data-temp-value', this.value)" onchange="calculateEngagement(this); saveData()" ${!isEditing ? 'readonly' : ''}>
+                    <input type="number" placeholder="0" class="post-new-followers ${followersClass}" value="${newFollowersValue}" oninput="this.setAttribute('data-temp-value', this.value); updateFollowersDisplay(this)" onchange="updateFollowersDisplay(this); saveData()" ${!isEditing ? 'readonly' : ''}>
                     <div class="engagement-rate" id="rate-${postId}">0%</div>
-                    <input type="text" placeholder="Additional notes" class="post-notes" value="${data.notes || ''}" onchange="saveData()" ${!isEditing ? 'readonly' : ''}>
                     <div class="post-actions">
                         ${saveButton}
                     </div>
                 </div>
+                <div style="margin-top: 10px;">
+                    <label style="font-size: 12px; color: #718096;">Notes:</label>
+                    <input type="text" placeholder="Additional notes about this post" class="post-notes" value="${data.notes || ''}" oninput="this.setAttribute('data-temp-value', this.value)" style="margin-top: 5px;" onchange="saveData()" ${!isEditing ? 'readonly' : ''}>
+                </div>
             `;
         }
 
-        // FIXED: Safe edit/cancel system that preserves data
         function editPost(platform, postId) {
             console.log('Editing post:', postId, 'on platform:', platform);
             
+            // Cancel any other edit first
             if (editingPostId !== null && editingPostId !== postId) {
                 cancelEdit();
             }
             
             editingPostId = postId;
-            const postDiv = document.querySelector('[data-post-id="' + postId + '"]');
+            const postDiv = document.querySelector(`[data-post-id="${postId}"]`);
             
             if (!postDiv) {
                 console.error('Post not found:', postId);
                 return;
             }
             
-            // STORE ORIGINAL DATA SAFELY
+            postDiv.classList.add('editing');
+            
+            // Collect current data more carefully, using temp values as backup
+            const descriptionEl = postDiv.querySelector('.post-description');
+            const typeEl = postDiv.querySelector('.post-type');
+            const viewsEl = postDiv.querySelector('.post-views');
+            const likesEl = postDiv.querySelector('.post-likes');
+            const commentsEl = postDiv.querySelector('.post-comments');
+            const savesEl = postDiv.querySelector('.post-saves'); // NEW
+            const sharesEl = postDiv.querySelector('.post-shares');
+            const newFollowersEl = postDiv.querySelector('.post-new-followers');
+            const notesEl = postDiv.querySelector('.post-notes');
+            
             const currentData = {
-                description: postDiv.querySelector('.post-description')?.value || '',
-                type: postDiv.querySelector('.post-type')?.value || 'Post',
-                views: postDiv.querySelector('.post-views')?.value || '',
-                likes: postDiv.querySelector('.post-likes')?.value || '',
-                comments: postDiv.querySelector('.post-comments')?.value || '',
-                saves: postDiv.querySelector('.post-saves')?.value || '',
-                shares: postDiv.querySelector('.post-shares')?.value || '',
-                newFollowers: postDiv.querySelector('.post-new-followers')?.value || '',
-                notes: postDiv.querySelector('.post-notes')?.value || ''
+                description: descriptionEl?.getAttribute('data-temp-value') || descriptionEl?.value || '',
+                type: typeEl?.getAttribute('data-temp-value') || typeEl?.value || 'Post',
+                views: viewsEl?.getAttribute('data-temp-value') || viewsEl?.value || '',
+                likes: likesEl?.getAttribute('data-temp-value') || likesEl?.value || '',
+                comments: commentsEl?.getAttribute('data-temp-value') || commentsEl?.value || '',
+                saves: savesEl?.getAttribute('data-temp-value') || savesEl?.value || '', // NEW
+                shares: sharesEl?.getAttribute('data-temp-value') || sharesEl?.value || '',
+                newFollowers: newFollowersEl?.getAttribute('data-temp-value') || newFollowersEl?.value || '',
+                notes: notesEl?.getAttribute('data-temp-value') || notesEl?.value || ''
             };
             
-            // Store the original data for potential cancellation
-            originalPostData[postId] = currentData;
+            console.log('Preserving data for edit:', currentData);
             
-            postDiv.classList.add('editing');
+            // Replace HTML with editing version, preserving all data
             postDiv.innerHTML = createPostHTML(postId, platform, currentData, true);
             
+            // Set the temp attributes to preserve the data
             setTimeout(() => {
-                const viewsEl = postDiv.querySelector('.post-views');
-                const followersEl = postDiv.querySelector('.post-new-followers');
-                if (viewsEl) calculateEngagement(viewsEl);
-                if (followersEl) updateFollowersDisplay(followersEl);
+                const newDescriptionEl = postDiv.querySelector('.post-description');
+                const newTypeEl = postDiv.querySelector('.post-type');
+                const newViewsEl = postDiv.querySelector('.post-views');
+                const newLikesEl = postDiv.querySelector('.post-likes');
+                const newCommentsEl = postDiv.querySelector('.post-comments');
+                const newSavesEl = postDiv.querySelector('.post-saves'); // NEW
+                const newSharesEl = postDiv.querySelector('.post-shares');
+                const newNewFollowersEl = postDiv.querySelector('.post-new-followers');
+                const newNotesEl = postDiv.querySelector('.post-notes');
+                
+                if (newDescriptionEl) newDescriptionEl.setAttribute('data-temp-value', currentData.description);
+                if (newTypeEl) newTypeEl.setAttribute('data-temp-value', currentData.type);
+                if (newViewsEl) newViewsEl.setAttribute('data-temp-value', currentData.views);
+                if (newLikesEl) newLikesEl.setAttribute('data-temp-value', currentData.likes);
+                if (newCommentsEl) newCommentsEl.setAttribute('data-temp-value', currentData.comments);
+                if (newSavesEl) newSavesEl.setAttribute('data-temp-value', currentData.saves); // NEW
+                if (newSharesEl) newSharesEl.setAttribute('data-temp-value', currentData.shares);
+                if (newNewFollowersEl) newNewFollowersEl.setAttribute('data-temp-value', currentData.newFollowers);
+                if (newNotesEl) newNotesEl.setAttribute('data-temp-value', currentData.notes);
+                
+                // Recalculate engagement and update followers display
+                if (newViewsEl) {
+                    calculateEngagement(newViewsEl);
+                }
+                if (newNewFollowersEl) {
+                    updateFollowersDisplay(newNewFollowersEl);
+                }
             }, 100);
         }
 
         function savePost(platform, postId) {
             console.log('Saving post:', postId, 'on platform:', platform);
             
-            const postDiv = document.querySelector('[data-post-id="' + postId + '"]');
+            const postDiv = document.querySelector(`[data-post-id="${postId}"]`);
             if (!postDiv) {
                 console.error('Post not found:', postId);
                 return;
@@ -1855,36 +1928,67 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             editingPostId = null;
             postDiv.classList.remove('editing');
             
-            // Get current data from form
+            // Collect data more carefully, using temp values as backup
+            const descriptionEl = postDiv.querySelector('.post-description');
+            const typeEl = postDiv.querySelector('.post-type');
+            const viewsEl = postDiv.querySelector('.post-views');
+            const likesEl = postDiv.querySelector('.post-likes');
+            const commentsEl = postDiv.querySelector('.post-comments');
+            const savesEl = postDiv.querySelector('.post-saves'); // NEW
+            const sharesEl = postDiv.querySelector('.post-shares');
+            const newFollowersEl = postDiv.querySelector('.post-new-followers');
+            const notesEl = postDiv.querySelector('.post-notes');
+            
             const currentData = {
-                description: postDiv.querySelector('.post-description')?.value || '',
-                type: postDiv.querySelector('.post-type')?.value || 'Post',
-                views: postDiv.querySelector('.post-views')?.value || '',
-                likes: postDiv.querySelector('.post-likes')?.value || '',
-                comments: postDiv.querySelector('.post-comments')?.value || '',
-                saves: postDiv.querySelector('.post-saves')?.value || '',
-                shares: postDiv.querySelector('.post-shares')?.value || '',
-                newFollowers: postDiv.querySelector('.post-new-followers')?.value || '',
-                notes: postDiv.querySelector('.post-notes')?.value || ''
+                description: descriptionEl?.getAttribute('data-temp-value') || descriptionEl?.value || '',
+                type: typeEl?.getAttribute('data-temp-value') || typeEl?.value || 'Post',
+                views: viewsEl?.getAttribute('data-temp-value') || viewsEl?.value || '',
+                likes: likesEl?.getAttribute('data-temp-value') || likesEl?.value || '',
+                comments: commentsEl?.getAttribute('data-temp-value') || commentsEl?.value || '',
+                saves: savesEl?.getAttribute('data-temp-value') || savesEl?.value || '', // NEW
+                shares: sharesEl?.getAttribute('data-temp-value') || sharesEl?.value || '',
+                newFollowers: newFollowersEl?.getAttribute('data-temp-value') || newFollowersEl?.value || '',
+                notes: notesEl?.getAttribute('data-temp-value') || notesEl?.value || ''
             };
             
             console.log('Saving data:', currentData);
             
-            // Switch to read-only view
+            // Replace HTML with non-editing version, preserving all data
             postDiv.innerHTML = createPostHTML(postId, platform, currentData, false);
             
-            // Clear stored original data
-            delete originalPostData[postId];
-            
+            // Set temp attributes on the new elements too
             setTimeout(() => {
-                const viewsEl = postDiv.querySelector('.post-views');
-                const followersEl = postDiv.querySelector('.post-new-followers');
-                if (viewsEl) calculateEngagement(viewsEl);
-                if (followersEl) updateFollowersDisplay(followersEl);
+                const newDescriptionEl = postDiv.querySelector('.post-description');
+                const newTypeEl = postDiv.querySelector('.post-type');
+                const newViewsEl = postDiv.querySelector('.post-views');
+                const newLikesEl = postDiv.querySelector('.post-likes');
+                const newCommentsEl = postDiv.querySelector('.post-comments');
+                const newSavesEl = postDiv.querySelector('.post-saves'); // NEW
+                const newSharesEl = postDiv.querySelector('.post-shares');
+                const newNewFollowersEl = postDiv.querySelector('.post-new-followers');
+                const newNotesEl = postDiv.querySelector('.post-notes');
+                
+                if (newDescriptionEl) newDescriptionEl.setAttribute('data-temp-value', currentData.description);
+                if (newTypeEl) newTypeEl.setAttribute('data-temp-value', currentData.type);
+                if (newViewsEl) newViewsEl.setAttribute('data-temp-value', currentData.views);
+                if (newLikesEl) newLikesEl.setAttribute('data-temp-value', currentData.likes);
+                if (newCommentsEl) newCommentsEl.setAttribute('data-temp-value', currentData.comments);
+                if (newSavesEl) newSavesEl.setAttribute('data-temp-value', currentData.saves); // NEW
+                if (newSharesEl) newSharesEl.setAttribute('data-temp-value', currentData.shares);
+                if (newNewFollowersEl) newNewFollowersEl.setAttribute('data-temp-value', currentData.newFollowers);
+                if (newNotesEl) newNotesEl.setAttribute('data-temp-value', currentData.notes);
+                
+                // Recalculate engagement, update followers display, and update summaries
+                if (newViewsEl) {
+                    calculateEngagement(newViewsEl);
+                }
+                if (newNewFollowersEl) {
+                    updateFollowersDisplay(newNewFollowersEl);
+                }
                 updatePlatformSummary(platform);
             }, 100);
             
-            // Save to database
+            // Save data
             if (currentUser && !initializationError) {
                 saveData().then(() => {
                     console.log('Post saved successfully');
@@ -1897,31 +2001,20 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
         function cancelEdit(platform, postId) {
             console.log('Cancelling edit for post:', postId);
             
-            const postDiv = document.querySelector('[data-post-id="' + postId + '"]');
+            const postDiv = document.querySelector(`[data-post-id="${postId}"]`);
             if (!postDiv) return;
             
-            // If this post has stored original data, restore it
-            if (originalPostData[postId]) {
-                editingPostId = null;
-                postDiv.classList.remove('editing');
-                
-                // Restore the original data
-                const originalData = originalPostData[postId];
-                postDiv.innerHTML = createPostHTML(postId, platform, originalData, false);
-                
-                // Clear stored data
-                delete originalPostData[postId];
-                
-                setTimeout(() => {
-                    const viewsEl = postDiv.querySelector('.post-views');
-                    const followersEl = postDiv.querySelector('.post-new-followers');
-                    if (viewsEl) calculateEngagement(viewsEl);
-                    if (followersEl) updateFollowersDisplay(followersEl);
-                    updatePlatformSummary(platform);
-                }, 100);
-            } else {
-                // This is a new post that was created in editing mode - remove it
+            // If this is a new post (was created in editing mode), remove it entirely
+            if (editingPostId === postId && postDiv.classList.contains('editing')) {
                 removePost(postDiv.querySelector('.cancel-btn'));
+                return;
+            }
+            
+            editingPostId = null;
+            
+            // Trigger a data reload to restore original state
+            if (currentUser && !initializationError) {
+                loadUserData();
             }
         }
 
@@ -1936,19 +2029,19 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                 editingPostId = null;
             }
             
-            // Clear any stored original data
-            delete originalPostData[postId];
-            
+            // Find and remove the associated header (the one directly before this post)
             const postHeader = postEntry.previousElementSibling;
             if (postHeader && postHeader.classList.contains('post-header')) {
                 postHeader.remove();
             }
             
+            // Remove the post
             postEntry.remove();
             
             const container = document.getElementById(platform + '-posts');
             const remainingPosts = container.querySelectorAll('.post-entry');
             
+            // If no posts left, remove the add button and summary too
             if (remainingPosts.length === 0) {
                 const addButton = container.querySelector('.add-post-button');
                 const summary = container.querySelector('.platform-summary-section');
@@ -1958,6 +2051,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             
             updatePlatformSummary(platform);
             
+            // Save data after removing post
             if (currentUser && !initializationError) {
                 saveData().then(() => {
                     console.log('Post removal saved successfully');
@@ -1967,16 +2061,17 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             }
         }
 
+        // UPDATED: Calculate engagement including saves
         function calculateEngagement(element) {
             const postEntry = element.closest('.post-entry');
             const views = parseFloat(postEntry.querySelector('.post-views').value) || 0;
             const likes = parseFloat(postEntry.querySelector('.post-likes').value) || 0;
             const comments = parseFloat(postEntry.querySelector('.post-comments').value) || 0;
-            const saves = parseFloat(postEntry.querySelector('.post-saves').value) || 0;
+            const saves = parseFloat(postEntry.querySelector('.post-saves').value) || 0; // NEW
             const shares = parseFloat(postEntry.querySelector('.post-shares').value) || 0;
             
             if (views > 0) {
-                const totalEngagement = likes + comments + saves + shares;
+                const totalEngagement = likes + comments + saves + shares; // NOW INCLUDES SAVES
                 const engagementRate = (totalEngagement / views) * 100;
                 
                 const rateElement = postEntry.querySelector('.engagement-rate');
@@ -1998,6 +2093,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             updatePlatformSummary(platform);
         }
 
+        // UPDATED: Platform summary function with saves tracking
         function updatePlatformSummary(platform) {
             const container = document.getElementById(platform + '-posts');
             const posts = container.querySelectorAll('.post-entry');
@@ -2014,7 +2110,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                 const views = parseFloat(post.querySelector('.post-views').value) || 0;
                 const likes = parseFloat(post.querySelector('.post-likes').value) || 0;
                 const comments = parseFloat(post.querySelector('.post-comments').value) || 0;
-                const saves = parseFloat(post.querySelector('.post-saves').value) || 0;
+                const saves = parseFloat(post.querySelector('.post-saves').value) || 0; // NEW
                 const shares = parseFloat(post.querySelector('.post-shares').value) || 0;
                 const newFollowers = parseInt(post.querySelector('.post-new-followers').value) || 0;
                 const description = post.querySelector('.post-description').value || 'Untitled post';
@@ -2022,17 +2118,21 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                 totalViews += views;
                 totalNewFollowers += newFollowers;
                 
+                // Calculate engagement rate for all posts (0% if no views) - NOW INCLUDES SAVES
                 const rate = views > 0 ? ((likes + comments + saves + shares) / views) * 100 : 0;
                 engagementRates.push(rate);
                 
+                // Track best post
                 if (rate > bestPost.rate) {
                     bestPost = { rate, description };
                 }
                 
+                // Track worst post (always, as long as we have posts)
                 if (rate < worstPost.rate) {
                     worstPost = { rate, description };
                 }
                 
+                // Track best follower-gaining post
                 if (newFollowers > bestFollowerPost.followers) {
                     bestFollowerPost = { followers: newFollowers, description };
                 }
@@ -2050,15 +2150,17 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             `;
             
             if (bestPost.rate > 0) {
-                summaryHTML += '<strong>Best Post:</strong> ' + bestPost.description + ' (' + bestPost.rate.toFixed(2) + '%)<br>';
+                summaryHTML += `<strong>Best Post:</strong> ${bestPost.description} (${bestPost.rate.toFixed(2)}%)<br>`;
             }
             
+            // Show worst post if we have multiple posts and the worst is different from the best
             if (totalPosts > 1 && worstPost.rate !== bestPost.rate && worstPost.rate < Infinity) {
-                summaryHTML += '<strong>Worst Post:</strong> ' + worstPost.description + ' (' + worstPost.rate.toFixed(2) + '%)<br>';
+                summaryHTML += `<strong>Worst Post:</strong> ${worstPost.description} (${worstPost.rate.toFixed(2)}%)<br>`;
             }
             
+            // Show best follower-gaining post
             if (bestFollowerPost.followers > 0) {
-                summaryHTML += '<strong>Best for Followers:</strong> ' + bestFollowerPost.description + ' (+' + bestFollowerPost.followers + ')<br>';
+                summaryHTML += `<strong>Best for Followers:</strong> ${bestFollowerPost.description} (+${bestFollowerPost.followers})<br>`;
             }
             
             const summaryElement = document.getElementById(platform + '-summary');
@@ -2069,6 +2171,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             updateOverallSummary();
         }
 
+        // UPDATED: Overall summary with saves tracking
         function updateOverallSummary() {
             const summaryGrid = document.getElementById('summaryGrid');
             
@@ -2088,7 +2191,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                         const views = parseFloat(post.querySelector('.post-views').value) || 0;
                         const likes = parseFloat(post.querySelector('.post-likes').value) || 0;
                         const comments = parseFloat(post.querySelector('.post-comments').value) || 0;
-                        const saves = parseFloat(post.querySelector('.post-saves').value) || 0;
+                        const saves = parseFloat(post.querySelector('.post-saves').value) || 0; // NEW
                         const shares = parseFloat(post.querySelector('.post-shares').value) || 0;
                         const newFollowers = parseInt(post.querySelector('.post-new-followers').value) || 0;
                         
@@ -2096,7 +2199,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                         totalNewFollowers += newFollowers;
                         
                         if (views > 0) {
-                            const rate = ((likes + comments + saves + shares) / views) * 100;
+                            const rate = ((likes + comments + saves + shares) / views) * 100; // NOW INCLUDES SAVES
                             allEngagementRates.push(rate);
                         }
                     });
@@ -2141,14 +2244,14 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             
             const total = creation + management + engagement + analytics;
             
-            let analysis = '<strong>Total Time Investment:</strong> ' + total + ' hours<br><br>';
+            let analysis = `<strong>Total Time Investment:</strong> ${total} hours<br><br>`;
             
             if (total > 0) {
-                analysis += '<strong>Time Breakdown:</strong><br>';
-                analysis += '• Content Creation: ' + creation + 'h (' + ((creation/total)*100).toFixed(1) + '%)<br>';
-                analysis += '• Platform Management: ' + management + 'h (' + ((management/total)*100).toFixed(1) + '%)<br>';
-                analysis += '• Engagement: ' + engagement + 'h (' + ((engagement/total)*100).toFixed(1) + '%)<br>';
-                analysis += '• Analytics: ' + analytics + 'h (' + ((analytics/total)*100).toFixed(1) + '%)<br><br>';
+                analysis += `<strong>Time Breakdown:</strong><br>`;
+                analysis += `• Content Creation: ${creation}h (${((creation/total)*100).toFixed(1)}%)<br>`;
+                analysis += `• Platform Management: ${management}h (${((management/total)*100).toFixed(1)}%)<br>`;
+                analysis += `• Engagement: ${engagement}h (${((engagement/total)*100).toFixed(1)}%)<br>`;
+                analysis += `• Analytics: ${analytics}h (${((analytics/total)*100).toFixed(1)}%)<br><br>`;
                 
                 if (creation > management + engagement + analytics) {
                     analysis += '<span style="color: #38a169;">✓ Good balance - spending most time on content creation</span>';
@@ -2166,22 +2269,23 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             const blob = new Blob([reportText], { type: 'text/plain' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'social-media-report-' + rangeData.startDate + '.txt';
+            link.download = `social-media-report-${rangeData.startDate}.txt`;
             link.click();
             
             alert('Report generated and downloaded!');
         }
 
+        // UPDATED: Report generation with saves tracking
         function generateReportText(rangeData) {
             const platforms = ['instagram', 'facebook', 'threads', 'tiktok', 'pinterest'];
-            let report = 'Social Media Analytics Report\n';
-            report += 'Date Range: ' + rangeData.startDate + ' - ' + rangeData.endDate + '\n\n';
+            let report = `Social Media Analytics Report\n`;
+            report += `Date Range: ${rangeData.startDate} - ${rangeData.endDate}\n\n`;
             
             platforms.forEach(platform => {
                 const platformData = rangeData.platforms[platform];
                 if (platformData && platformData.posts && platformData.posts.length > 0) {
-                    report += platform.charAt(0).toUpperCase() + platform.slice(1) + ':\n';
-                    report += 'Posts: ' + platformData.posts.length + '\n';
+                    report += `${platform.charAt(0).toUpperCase() + platform.slice(1)}:\n`;
+                    report += `Posts: ${platformData.posts.length}\n`;
                     
                     let totalViews = 0;
                     let totalEngagements = 0;
@@ -2189,7 +2293,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                     
                     platformData.posts.forEach((post, index) => {
                         const views = post.views || 0;
-                        const engagements = (post.likes || 0) + (post.comments || 0) + (post.saves || 0) + (post.shares || 0);
+                        const engagements = (post.likes || 0) + (post.comments || 0) + (post.saves || 0) + (post.shares || 0); // NOW INCLUDES SAVES
                         const newFollowers = post.newFollowers || 0;
                         
                         totalViews += views;
@@ -2198,24 +2302,24 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                         
                         if (views > 0) {
                             const rate = (engagements / views) * 100;
-                            report += '- ' + (post.description || ('Post ' + (index + 1))) + ': ' + views + ' views, ' + rate.toFixed(2) + '% engagement';
+                            report += `- ${post.description || `Post ${index + 1}`}: ${views} views, ${rate.toFixed(2)}% engagement`;
                             if (newFollowers !== 0) {
-                                report += ', ' + (newFollowers > 0 ? '+' : '') + newFollowers + ' followers';
+                                report += `, ${newFollowers > 0 ? '+' : ''}${newFollowers} followers`;
                             }
-                            report += '\n';
+                            report += `\n`;
                         }
                     });
                     
                     if (totalViews > 0) {
                         const avgRate = (totalEngagements / totalViews) * 100;
-                        report += 'Average engagement: ' + avgRate.toFixed(2) + '%\n';
+                        report += `Average engagement: ${avgRate.toFixed(2)}%\n`;
                     }
                     
                     if (totalNewFollowers !== 0) {
-                        report += 'Total new followers: ' + (totalNewFollowers > 0 ? '+' : '') + totalNewFollowers + '\n';
+                        report += `Total new followers: ${totalNewFollowers > 0 ? '+' : ''}${totalNewFollowers}\n`;
                     }
                     
-                    report += '\n';
+                    report += `\n`;
                 }
             });
             
@@ -2229,7 +2333,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             
             const link = document.createElement('a');
             link.href = URL.createObjectURL(dataBlob);
-            link.download = 'social-media-data-' + rangeData.startDate + '.json';
+            link.download = `social-media-data-${rangeData.startDate}.json`;
             link.click();
         }
 
@@ -2270,35 +2374,40 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             reader.readAsText(file);
         }
 
+        // UPDATED: CSV processing with saves support
         function processCSVString(csvData, source) {
             const lines = csvData.split('\n');
             let headerProcessed = false;
             let addedCount = 0;
             
+            // Simple CSV parsing
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i].trim();
                 if (!line) continue;
                 
+                // Skip header row
                 if (!headerProcessed) {
                     headerProcessed = true;
+                    // Check if this looks like a header
                     if (line.toLowerCase().includes('platform') || line.toLowerCase().includes('post')) {
                         continue;
                     }
                 }
                 
                 const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
-                if (values.length < 8) continue;
+                if (values.length < 8) continue; // Now requires at least 8 columns (including saves)
                 
                 const platform = values[0].toLowerCase().trim();
                 const postType = values[1].trim();
                 const views = parseInt(values[2]) || 0;
                 const likes = parseInt(values[3]) || 0;
                 const comments = parseInt(values[4]) || 0;
-                const saves = parseInt(values[5]) || 0;
+                const saves = parseInt(values[5]) || 0; // NEW
                 const shares = parseInt(values[6]) || 0;
                 const newFollowers = parseInt(values[7]) || 0;
                 const description = values[8] || postType;
                 
+                // Add to appropriate platform
                 if (['instagram', 'facebook', 'threads', 'tiktok', 'pinterest'].includes(platform)) {
                     addPost(platform);
                     const container = document.getElementById(platform + '-posts');
@@ -2310,13 +2419,14 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                         lastPost.querySelector('.post-views').value = views;
                         lastPost.querySelector('.post-likes').value = likes;
                         lastPost.querySelector('.post-comments').value = comments;
-                        lastPost.querySelector('.post-saves').value = saves;
+                        lastPost.querySelector('.post-saves').value = saves; // NEW
                         lastPost.querySelector('.post-shares').value = shares;
                         lastPost.querySelector('.post-new-followers').value = newFollowers;
                         
                         calculateEngagement(lastPost.querySelector('.post-views'));
                         updateFollowersDisplay(lastPost.querySelector('.post-new-followers'));
                         
+                        // Save the post after adding bulk data
                         savePost(platform, lastPost.dataset.postId);
                         addedCount++;
                     }
@@ -2327,15 +2437,16 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                 if (currentUser && !initializationError) {
                     saveData().then(() => {
                         console.log('Bulk import data saved successfully');
-                        alert('✅ Successfully imported ' + addedCount + ' posts from ' + (source === 'upload' ? 'file' : 'pasted data') + '!');
+                        alert(`✅ Successfully imported ${addedCount} posts from ${source === 'upload' ? 'file' : 'pasted data'}!`);
                     }).catch((error) => {
                         console.error('Save error:', error);
-                        alert('✅ Successfully imported ' + addedCount + ' posts! (Note: Save to cloud failed - data exists locally)');
+                        alert(`✅ Successfully imported ${addedCount} posts! (Note: Save to cloud failed - data exists locally)`);
                     });
                 } else {
-                    alert('✅ Successfully imported ' + addedCount + ' posts from ' + (source === 'upload' ? 'file' : 'pasted data') + '!');
+                    alert(`✅ Successfully imported ${addedCount} posts from ${source === 'upload' ? 'file' : 'pasted data'}!`);
                 }
                 
+                // Clear the input
                 if (source === 'paste') {
                     document.getElementById('csvInput').value = '';
                 } else {
@@ -2346,7 +2457,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             }
         }
 
-        // AI Screenshot Analysis functions would go here (same as before)
+        // UPDATED: AI Screenshot Analysis with saves support
         async function callOpenAIVision(base64Image) {
             if (!userApiKey) {
                 throw new Error('No API key provided');
@@ -2356,7 +2467,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + userApiKey
+                    'Authorization': `Bearer ${userApiKey}`
                 },
                 body: JSON.stringify({
                     model: "gpt-4o",
@@ -2366,12 +2477,37 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                             content: [
                                 {
                                     type: "text",
-                                    text: 'Please analyze this social media analytics screenshot and extract the following data. Look for metrics like views, likes, comments, saves, shares, followers gained, engagement rate, etc. \n\nReturn ONLY a JSON object in this exact format (no other text):\n{\n    "success": true,\n    "data": {\n        "platform": "instagram|facebook|tiktok|threads|pinterest",\n        "postType": "post|reel|story|video|pin",\n        "views": 1234,\n        "likes": 89,\n        "comments": 12,\n        "saves": 15,\n        "shares": 5,\n        "newFollowers": 3,\n        "engagementRate": "8.48%",\n        "description": "brief description of what this post was about if visible"\n    }\n}\n\nIf you cannot extract meaningful data, return:\n{\n    "success": false,\n    "error": "reason why data could not be extracted"\n}\n\nLook carefully for any numbers related to engagement metrics including saves/bookmarks and follower gains. Sometimes they may be labeled differently (e.g., "reactions" instead of "likes", "bookmarks" instead of "saves", "reposts" instead of "shares", "followers gained" or "new followers", etc.).'
+                                    text: `Please analyze this social media analytics screenshot and extract the following data. Look for metrics like views, likes, comments, saves, shares, followers gained, engagement rate, etc. 
+
+Return ONLY a JSON object in this exact format (no other text):
+{
+    "success": true,
+    "data": {
+        "platform": "instagram|facebook|tiktok|threads|pinterest",
+        "postType": "post|reel|story|video|pin",
+        "views": 1234,
+        "likes": 89,
+        "comments": 12,
+        "saves": 15,
+        "shares": 5,
+        "newFollowers": 3,
+        "engagementRate": "8.48%",
+        "description": "brief description of what this post was about if visible"
+    }
+}
+
+If you cannot extract meaningful data, return:
+{
+    "success": false,
+    "error": "reason why data could not be extracted"
+}
+
+Look carefully for any numbers related to engagement metrics including saves/bookmarks and follower gains. Sometimes they may be labeled differently (e.g., "reactions" instead of "likes", "bookmarks" instead of "saves", "reposts" instead of "shares", "followers gained" or "new followers", etc.).`
                                 },
                                 {
                                     type: "image_url",
                                     image_url: {
-                                        url: 'data:image/jpeg;base64,' + base64Image
+                                        url: `data:image/jpeg;base64,${base64Image}`
                                     }
                                 }
                             ]
@@ -2383,7 +2519,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             
             if (!response.ok) {
                 const errorData = await response.text();
-                throw new Error('OpenAI API error: ' + response.status + ' - ' + errorData);
+                throw new Error(`OpenAI API error: ${response.status} - ${errorData}`);
             }
             
             const result = await response.json();
@@ -2417,25 +2553,31 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             });
         }
         
+        // UPDATED: Add extracted data with saves support
         function addExtractedDataToTracker(index) {
-            const resultDiv = document.querySelector('#actions-' + index).closest('.analysis-result');
+            const resultDiv = document.querySelector(`#actions-${index}`).closest('.analysis-result');
             const extractedData = JSON.parse(resultDiv.dataset.extractedData);
-            const platform = document.getElementById('platform-' + index).value;
+            const platform = document.getElementById(`platform-${index}`).value;
             
+            // Switch to dashboard view if not already there
             if (currentEntryMethod !== 'dashboard') {
                 switchEntryMethod('dashboard');
             }
             
+            // Add post to the selected platform (this creates it in editing mode)
             addPost(platform);
             
+            // Get the last added post and populate it
             const container = document.getElementById(platform + '-posts');
-            const lastPost = container.lastElementChild.previousElementSibling;
+            const lastPost = container.lastElementChild.previousElementSibling; // Get post before add button
             
             if (lastPost && lastPost.classList.contains('post-entry') && extractedData) {
                 lastPost.querySelector('.post-description').value = extractedData.description || 'AI extracted post';
                 
+                // Set the post type if available
                 const typeSelect = lastPost.querySelector('.post-type');
                 if (extractedData.postType && typeSelect) {
+                    // Map common types to our dropdown options
                     const typeMap = {
                         'reel': 'Reel',
                         'post': 'Post', 
@@ -2447,6 +2589,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                     };
                     const mappedType = typeMap[extractedData.postType.toLowerCase()] || extractedData.postType;
                     
+                    // Find matching option
                     for (let option of typeSelect.options) {
                         if (option.value.toLowerCase() === mappedType.toLowerCase()) {
                             option.selected = true;
@@ -2454,6 +2597,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                         }
                     }
                     
+                    // If no match found, use "Other"
                     if (typeSelect.value === '') {
                         typeSelect.value = 'Other';
                     }
@@ -2462,23 +2606,27 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                 lastPost.querySelector('.post-views').value = extractedData.views || '';
                 lastPost.querySelector('.post-likes').value = extractedData.likes || '';
                 lastPost.querySelector('.post-comments').value = extractedData.comments || '';
-                lastPost.querySelector('.post-saves').value = extractedData.saves || '';
+                lastPost.querySelector('.post-saves').value = extractedData.saves || ''; // NEW
                 lastPost.querySelector('.post-shares').value = extractedData.shares || '';
                 lastPost.querySelector('.post-new-followers').value = extractedData.newFollowers || '';
                 
+                // Calculate engagement rate and update followers display if we have views
                 if (extractedData.views > 0) {
                     calculateEngagement(lastPost.querySelector('.post-views'));
                 }
                 
+                // Update followers display
                 const followersInput = lastPost.querySelector('.post-new-followers');
                 if (followersInput) {
                     updateFollowersDisplay(followersInput);
                 }
                 
+                // Save the post immediately after adding AI data
                 savePost(platform, lastPost.dataset.postId);
                 
-                alert('✅ Data added to ' + platform.charAt(0).toUpperCase() + platform.slice(1) + ' dashboard and saved!');
+                alert(`✅ Data added to ${platform.charAt(0).toUpperCase() + platform.slice(1)} dashboard and saved!`);
                 
+                // Optionally hide the analysis result after adding
                 resultDiv.style.opacity = '0.6';
                 const addButton = resultDiv.querySelector('button');
                 addButton.textContent = 'Added ✓';
@@ -2486,6 +2634,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             }
         }
 
+        // Enhanced analyze screenshot function with saves data extraction
         async function analyzeScreenshot(file, index) {
             const resultsContainer = document.getElementById('analysisResults');
             
@@ -2518,8 +2667,8 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                 
                 const statusDiv = resultDiv.querySelector('.status');
                 const loadingSpinner = resultDiv.querySelector('.loading-spinner');
-                const dataGrid = document.getElementById('data-' + index);
-                const actions = document.getElementById('actions-' + index);
+                const dataGrid = document.getElementById(`data-${index}`);
+                const actions = document.getElementById(`actions-${index}`);
                 
                 loadingSpinner.style.display = 'none';
                 statusDiv.innerHTML = '<div class="success-message">✅ Analysis complete!</div>';
@@ -2563,7 +2712,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                     resultDiv.dataset.extractedData = JSON.stringify(extractedData.data);
                     
                     if (extractedData.data.platform) {
-                        document.getElementById('platform-' + index).value = extractedData.data.platform.toLowerCase();
+                        document.getElementById(`platform-${index}`).value = extractedData.data.platform.toLowerCase();
                     }
                     
                     actions.style.display = 'block';
@@ -2591,6 +2740,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             }
         }
 
+        // API Key Management Functions - FIXED to auto-detect existing keys
         function validateApiKey() {
             const apiKeyInput = document.getElementById('openaiApiKey');
             const saveBtn = document.getElementById('saveApiKeyBtn');
@@ -2602,6 +2752,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             saveBtn.disabled = !isValid;
             clearBtn.disabled = !(userApiKey || apiKey);
             
+            // If there's a valid API key in the input and it's not already saved, automatically enable upload
             if (isValid && !userApiKey) {
                 userApiKey = apiKey;
                 document.getElementById('apiKeyStatus').classList.remove('hidden');
@@ -2681,6 +2832,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             }
         }
 
+        // AI Screenshot Analysis Functions
         async function analyzeScreenshots(event) {
             if (!userApiKey) {
                 alert('Please enter your OpenAI API key first to use screenshot analysis.');
@@ -2700,14 +2852,17 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             }
         }
 
-        // Account Management Functions
+        // Account Management Functions - ENHANCED with immediate theme application
         function switchAccount() {
             const selectedAccountId = document.getElementById('currentAccountSelect').value;
             if (selectedAccountId !== currentAccountId) {
                 currentAccountId = selectedAccountId;
                 updateCurrentAccountDisplay();
+                
+                // Apply theme immediately when switching accounts
                 applyAccountTheme();
-                loadUserData();
+                
+                loadUserData(); // Reload data for the new account
             }
         }
         
@@ -2717,13 +2872,16 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             document.getElementById('currentAccountDescription').textContent = account.description || '';
         }
         
+        // NEW: Function to apply account theme colors
         function applyAccountTheme() {
             const account = userAccounts[currentAccountId];
             const color = account.color || '#667eea';
             
+            // Convert hex to HSL for lighter variants
             const lighterColor = lightenColor(color, 0.9);
             const darkerColor = darkenColor(color, 0.1);
             
+            // Update CSS custom properties
             document.documentElement.style.setProperty('--account-color', color);
             document.documentElement.style.setProperty('--account-color-light', lighterColor);
             document.documentElement.style.setProperty('--account-color-dark', darkerColor);
@@ -2731,6 +2889,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             console.log('Applied theme:', color, 'for account:', account.name);
         }
         
+        // Helper function to lighten a color
         function lightenColor(color, amount) {
             const num = parseInt(color.slice(1), 16);
             const amt = Math.round(255 * amount);
@@ -2742,6 +2901,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                 (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
         }
         
+        // Helper function to darken a color
         function darkenColor(color, amount) {
             const num = parseInt(color.slice(1), 16);
             const amt = Math.round(255 * amount);
@@ -2792,10 +2952,12 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             }
             
             if (editingAccountId) {
+                // Editing existing account
                 userAccounts[editingAccountId].name = name;
                 userAccounts[editingAccountId].description = description;
                 userAccounts[editingAccountId].color = color;
             } else {
+                // Creating new account
                 const accountId = 'account_' + Date.now();
                 userAccounts[accountId] = {
                     id: accountId,
@@ -2805,13 +2967,18 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                     createdAt: new Date().toISOString()
                 };
                 
+                // Switch to the new account
                 currentAccountId = accountId;
             }
             
+            // Update the dropdown and display
             populateAccountsDropdown();
             updateCurrentAccountDisplay();
+            
+            // Apply the theme immediately (critical fix)
             applyAccountTheme();
             
+            // Save to Firebase
             if (currentUser && !initializationError) {
                 await saveUserAccounts();
             }
@@ -2821,7 +2988,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
         }
         
         function editAccount(accountId) {
-            if (accountId === 'default') return;
+            if (accountId === 'default') return; // Can't edit default account
             
             editingAccountId = accountId;
             const account = userAccounts[accountId];
@@ -2841,28 +3008,34 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                 return;
             }
             
-            if (!confirm('Are you sure you want to delete "' + userAccounts[accountId].name + '"? This will also delete all data associated with this account.')) {
+            if (!confirm(`Are you sure you want to delete "${userAccounts[accountId].name}"? This will also delete all data associated with this account.`)) {
                 return;
             }
             
+            // If deleting current account, switch to default
             if (currentAccountId === accountId) {
                 currentAccountId = 'default';
                 updateCurrentAccountDisplay();
-                applyAccountTheme();
+                applyAccountTheme(); // Apply default theme
             }
             
+            // Delete from accounts list
             delete userAccounts[accountId];
             
+            // Update dropdown
             populateAccountsDropdown();
             populateAccountsList();
             
+            // Delete account data from Firebase
             if (currentUser && !initializationError) {
                 try {
+                    // Delete all date ranges for this account
                     const accountRef = collection(db, 'users', currentUser.uid, 'accounts', accountId, 'dateRanges');
                     const snapshot = await getDocs(accountRef);
                     const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
                     await Promise.all(deletePromises);
                     
+                    // Delete the account document
                     await deleteDoc(doc(db, 'users', currentUser.uid, 'accounts', accountId));
                     
                     await saveUserAccounts();
@@ -2872,7 +3045,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             }
             
             alert('Account deleted successfully');
-            loadUserData();
+            loadUserData(); // Reload data for current account
         }
         
         function populateAccountsDropdown() {
@@ -2896,7 +3069,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
             
             Object.values(userAccounts).forEach(account => {
                 const accountDiv = document.createElement('div');
-                accountDiv.className = 'account-item ' + (account.id === currentAccountId ? 'current-account' : '');
+                accountDiv.className = `account-item ${account.id === currentAccountId ? 'current-account' : ''}`;
                 accountDiv.innerHTML = `
                     <div class="account-info">
                         <h4>${account.name} ${account.id === currentAccountId ? '(Current)' : ''}</h4>
@@ -2944,7 +3117,7 @@ Facebook,Post,456,23,8,3,2,1,7.24%"></textarea>
                 
                 populateAccountsDropdown();
                 updateCurrentAccountDisplay();
-                applyAccountTheme();
+                applyAccountTheme(); // Apply the loaded theme
             } catch (error) {
                 console.error('Error loading accounts:', error);
             }
