@@ -3,15 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Development Cost Tracker</title>
+    <title>Social Media Analytics Dashboard</title>
     <style>
+        :root {
+            --account-color: #667eea;
+            --account-color-light: #ebf8ff;
+            --account-color-dark: #5a67d8;
+        }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--account-color) 0%, #764ba2 100%);
             min-height: 100vh;
+            transition: background 0.3s ease;
         }
         
         .container {
@@ -65,110 +72,189 @@
             border-radius: 50%;
         }
         
-        .section {
-            margin-bottom: 40px;
+        .date-selector {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .date-input-section {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .main-section {
             background: #f8f9fa;
             padding: 25px;
             border-radius: 12px;
-            border-left: 5px solid #667eea;
+            margin-bottom: 30px;
+            border-left: 5px solid var(--account-color);
         }
         
-        .section h2 {
-            color: #4a5568;
-            margin-top: 0;
-            margin-bottom: 20px;
+        .entry-methods {
             display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8em;
-            font-weight: bold;
-        }
-        
-        .paid-off {
-            background: #c6f6d5;
-            color: #22543d;
-        }
-        
-        .in-progress {
-            background: #fed7d7;
-            color: #742a2a;
-        }
-        
-        .firebase-cloud {
-            background: #e6fffa;
-            color: #234e52;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
+            gap: 15px;
+            margin-bottom: 25px;
             background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            flex-wrap: wrap;
+        }
+        
+        .entry-method {
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            padding: 15px;
             border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
         }
         
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        th {
-            background: #4a5568;
-            color: white;
-            font-weight: 600;
-        }
-        
-        tr:hover {
+        .entry-method:hover {
             background: #f7fafc;
         }
         
-        .input-group {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1.5fr 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
+        .entry-method.active {
+            background: var(--account-color-light);
+            border: 2px solid var(--account-color);
         }
         
-        .quarterly-input-group {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr;
-            gap: 15px;
+        .platform-section {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
             margin-bottom: 20px;
+            overflow: hidden;
         }
         
-        label {
-            display: block;
+        .platform-header {
+            background: #4a5568;
+            color: white;
+            padding: 15px 20px;
             font-weight: 600;
-            color: #4a5568;
-            margin-bottom: 5px;
-            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
         }
         
-        input, select {
+        .platform-content {
+            padding: 20px;
+        }
+        
+        .post-entry {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .post-entry.editing {
+            background: #f0f8ff !important;
+            border: 2px solid var(--account-color) !important;
+        }
+        
+        .post-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 60px;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 12px;
+            color: #4a5568;
             padding: 10px;
+            background: #e2e8f0;
+            border-radius: 6px;
+        }
+        
+        .post-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 60px;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .engagement-rate {
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .rate-excellent { background: #c6f6d5; color: #22543d; }
+        .rate-good { background: #bee3f8; color: #2c5282; }
+        .rate-average { background: #fef5e7; color: #744210; }
+        .rate-poor { background: #fed7d7; color: #742a2a; }
+        
+        .post-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 60px;
+        }
+        
+        .edit-btn, .save-btn, .cancel-btn {
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .edit-btn {
+            background: #3182ce;
+            color: white;
+        }
+        
+        .save-btn {
+            background: #38a169;
+            color: white;
+        }
+        
+        .cancel-btn {
+            background: #718096;
+            color: white;
+        }
+        
+        .remove-btn {
+            background: #e53e3e;
+            color: white;
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        input, select, textarea {
+            padding: 8px 12px;
             border: 2px solid #e2e8f0;
             border-radius: 6px;
             font-size: 14px;
-            transition: border-color 0.3s;
             width: 100%;
             box-sizing: border-box;
         }
         
-        input:focus, select:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--account-color);
         }
         
         button {
-            background: #667eea;
+            background: var(--account-color);
             color: white;
             border: none;
             padding: 10px 20px;
@@ -176,12 +262,10 @@
             cursor: pointer;
             font-weight: 600;
             transition: background 0.3s;
-            width: 100%;
-            box-sizing: border-box;
         }
         
         button:hover {
-            background: #5a67d8;
+            background: var(--account-color-dark);
         }
         
         button:disabled {
@@ -207,29 +291,71 @@
             background: #3367d6;
         }
         
-        .formula-explanation {
-            background: #ebf8ff;
-            border: 1px solid #bee3f8;
-            border-radius: 8px;
+        .google-signin-btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+        
+        .summary-section {
+            background: var(--account-color-light);
+            border: 2px solid var(--account-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-card {
+            background: white;
             padding: 15px;
-            margin-top: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .summary-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--account-color);
+        }
+        
+        .summary-label {
+            color: #718096;
             font-size: 0.9em;
-            color: #2c5282;
+            margin-top: 5px;
         }
         
-        .profit-positive {
-            color: #22543d;
-            font-weight: bold;
+        .insights-section {
+            background: #f0fff4;
+            border: 2px solid #9ae6b4;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
         }
         
-        .profit-negative {
-            color: #742a2a;
-            font-weight: bold;
+        .hidden {
+            display: none !important;
         }
         
-        .estimated-timeline {
-            color: #553c9a;
-            font-style: italic;
+        .expand-icon {
+            transition: transform 0.3s;
+        }
+        
+        .collapsed .expand-icon {
+            transform: rotate(-90deg);
+        }
+        
+        .bulk-input {
+            width: 100%;
+            min-height: 150px;
+            font-family: monospace;
+            font-size: 12px;
         }
         
         .loading {
@@ -239,120 +365,358 @@
             padding: 20px;
         }
         
-        .hidden {
-            display: none !important;
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
         }
         
-        .edit-btn, .save-btn, .cancel-btn, .delete-btn {
-            padding: 5px 10px;
-            font-size: 12px;
-            margin-right: 5px;
-            width: 60px;
+        .firebase-cloud {
+            background: #e6fffa;
+            color: #234e52;
+        }
+        
+        .api-key-section {
+            background: #fef5e7;
+            border: 2px solid #f6e05e;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .api-key-info {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+        
+        .api-key-info ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .api-key-info a {
+            color: var(--account-color);
+            text-decoration: none;
+        }
+        
+        .api-key-info a:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #f56565;
+        }
+        
+        .success-message {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #48bb78;
+        }
+        
+        .file-drop-zone {
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        
+        .file-drop-zone:hover {
+            border-color: var(--account-color);
+            background: #f7fafc;
+        }
+        
+        .analysis-result {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .analysis-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .screenshot-preview {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+        
+        .extracted-data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .data-field {
+            background: white;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
             text-align: center;
         }
         
-        .edit-btn {
-            background: #3182ce;
-        }
-        
-        .save-btn {
-            background: #38a169;
-        }
-        
-        .cancel-btn {
-            background: #718096;
-        }
-        
-        .delete-btn {
-            background: #e53e3e;
-        }
-        
-        .cost-breakdown {
-            font-size: 0.9em;
+        .data-label {
+            font-size: 0.8em;
             color: #718096;
-            margin-top: 5px;
+            margin-bottom: 4px;
         }
         
-        .edit-row {
-            background: #f0f8ff !important;
+        .data-value {
+            font-weight: bold;
+            color: #2d3748;
         }
         
-        .edit-input {
-            width: 100%;
-            padding: 5px;
-            border: 1px solid #667eea;
-            border-radius: 4px;
-            font-size: 12px;
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--account-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
         
-        .cost-editing-container {
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .debug-info {
+            background: #fef5e7;
+            border: 1px solid #f6e05e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #744210;
+        }
+
+        .csv-upload-section {
+            background: #f8f9fa;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .csv-input-methods {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .cost-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .cost-row {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            min-height: 32px;
-        }
-        
-        .cost-row select {
-            flex: 1;
-        }
-        
-        .cost-row input {
-            width: 80px;
-            flex-shrink: 0;
-        }
-        
-        .add-cost-btn {
-            background: #38a169;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
-            width: auto;
-            white-space: nowrap;
-        }
-        
-        .remove-cost-btn {
-            background: #e53e3e;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 3px;
-            font-size: 11px;
-            cursor: pointer;
-            width: auto;
-            flex-shrink: 0;
-        }
-        
-        .backup-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
             gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .csv-method {
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid #e2e8f0;
+            background: white;
+        }
+        
+        .csv-method:hover {
+            border-color: var(--account-color);
+        }
+        
+        .csv-method.active {
+            border-color: var(--account-color);
+            background: var(--account-color-light);
+        }
+
+        @media (max-width: 768px) {
+            .date-input-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .entry-methods {
+                flex-direction: column;
+            }
+            
+            .post-grid, .post-header {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .post-actions {
+                flex-direction: row;
+                justify-content: center;
+            }
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: #2d3748;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #718096;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-close:hover {
+            color: #2d3748;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            padding: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .account-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .account-info h4 {
+            margin: 0 0 5px 0;
+            color: #2d3748;
+        }
+        
+        .account-info p {
+            margin: 0;
+            color: #718096;
+            font-size: 14px;
+        }
+        
+        .account-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .account-actions button {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .current-account {
+            background: var(--account-color-light);
+            border: 2px solid var(--account-color);
+        }
+
+        .migration-notice {
+            background: #c6f6d5;
+            border: 2px solid #48bb78;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* NEW: Followers column styling */
+        .new-followers {
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .new-followers.positive {
+            color: #38a169;
+        }
+
+        .new-followers.zero {
+            color: #718096;
+        }
+
+        .new-followers.negative {
+            color: #e53e3e;
+        }
+
+        .date-range-info {
+            background: #e6fffa;
+            border: 1px solid #4fd1c7;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #234e52;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📚 Book Development Cost Tracker <span class="status-badge firebase-cloud">☁️ CLOUD SYNC</span></h1>
+        <h1>📱 Social Media Analytics Dashboard <span class="status-badge firebase-cloud">☁️ CLOUD SYNC</span></h1>
         
         <!-- Authentication Section -->
         <div id="authSection" class="auth-section">
             <h2>Sign in to sync your data across devices</h2>
-            <p>Your book tracking data will be automatically saved and synced to all your devices.</p>
-            <button class="google-signin-btn" onclick="signInWithGoogle()">
+            <p>Your analytics data will be automatically saved and synced to all your devices.</p>
+            <button class="google-signin-btn" id="signInBtn" onclick="signInWithGoogle()">
                 <svg width="20" height="20" viewBox="0 0 24 24">
                     <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -361,9 +725,18 @@
                 </svg>
                 Sign in with Google
             </button>
+            
+            <div id="errorMessage" class="error-message hidden">
+                <strong>Sign-in Error:</strong> <span id="errorText"></span>
+            </div>
+            
+            <div id="debugInfo" class="debug-info hidden">
+                <strong>Debug Information:</strong>
+                <div id="debugText"></div>
+            </div>
         </div>
 
-        <!-- User Info Section -->
+        <!-- User Info Section (shown when logged in) -->
         <div id="userSection" class="hidden">
             <div class="user-info">
                 <div class="user-details">
@@ -377,146 +750,244 @@
             </div>
         </div>
 
-        <!-- Main App Content -->
+        <!-- Migration Notice -->
+        <div id="migrationNotice" class="migration-notice hidden">
+            <h3>✅ Data Migration Complete!</h3>
+            <p>Your existing data has been successfully migrated to the new account system and is now available in your "Default Account".</p>
+        </div>
+
+        <!-- Main App Content (shown when logged in) -->
         <div id="appContent" class="hidden">
             
-            <!-- How it Works Section -->
-            <div class="section">
-                <h2>📖 How it Works</h2>
-                <div class="formula-explanation">
-                    <strong>Step 1:</strong> Add books with title (cost and release date optional)<br>
-                    <strong>Step 2:</strong> Use "Edit" to add development costs (editing, cover design, etc.)<br>
-                    <strong>Step 3:</strong> Add quarterly profit updates until cumulative profit ≥ development cost<br>
-                    <strong>Step 4:</strong> Books automatically move to "Paid Off" when profitable<br><br>
-                    <strong>☁️ Cloud Sync:</strong> Your data is automatically saved to your Google account and synced across all devices!<br>
-                    <strong>✏️ Flexible Editing:</strong> Click "Edit" on any book to modify details and add/edit development costs!<br>
-                    <strong>📅 Flexible Dates:</strong> Enter dates as "2025-03-15", "03/15/2025", "March 15, 2025", or "Q1 2025" for quarters!
+            <!-- Account Management Section -->
+            <div class="main-section">
+                <h2>👥 Account Management</h2>
+                <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;">
+                    <select id="currentAccountSelect" onchange="switchAccount()" style="flex: 1; min-width: 200px;">
+                        <option value="default">Default Account</option>
+                    </select>
+                    <button onclick="showCreateAccountModal()" style="background: #38a169; white-space: nowrap;">+ Add New Account</button>
+                    <button onclick="showManageAccountsModal()" style="background: #3182ce; white-space: nowrap;">Manage Accounts</button>
+                </div>
+                <div id="currentAccountInfo" style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <strong>Current Account:</strong> <span id="currentAccountName">Default Account</span>
+                    <span id="currentAccountDescription" style="margin-left: 15px; color: #718096;"></span>
                 </div>
             </div>
             
-            <div class="section">
-                <h2>📊 Books Still Paying Off <span class="status-badge in-progress">TRACKING</span></h2>
+            <!-- Date Range Selector - Enhanced with better feedback -->
+            <div class="date-selector">
+                <h3>📅 Select Date Range</h3>
+                <div class="date-input-section">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label><strong>Start Date:</strong></label>
+                        <input type="date" id="startDatePicker" onchange="updateDateRange()" style="width: 100%;">
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label><strong>End Date:</strong></label>
+                        <input type="date" id="endDatePicker" onchange="updateDateRange()" style="width: 100%;">
+                    </div>
+                </div>
+                <div id="dateRangeInfo" class="date-range-info hidden">
+                    <strong>📍 Data Found:</strong> <span id="dataRangeText"></span>
+                </div>
+                <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
+                    <button onclick="setThisWeek()">📅 This Week</button>
+                    <button onclick="setLastWeek()">⬅️ Last Week</button>
+                    <button onclick="generateReport()">📊 Generate Report</button>
+                    <button onclick="exportData()" style="background: #38a169;">📥 Export Data</button>
+                </div>
+            </div>
+            
+            <!-- Main Dashboard -->
+            <div class="main-section">
+                <h2>📊 Dashboard & Data Entry</h2>
                 
-                <div class="input-group">
+                <!-- Entry Method Selection -->
+                <div class="entry-methods">
+                    <div class="entry-method active" onclick="switchEntryMethod('dashboard')" id="dashboardMethod">
+                        <h4>📊 Dashboard</h4>
+                        <p>View and manage all posts</p>
+                    </div>
+                    <div class="entry-method" onclick="switchEntryMethod('bulk')" id="bulkMethod">
+                        <h4>📋 Bulk CSV Import</h4>
+                        <p>Import multiple posts at once</p>
+                    </div>
+                    <div class="entry-method" onclick="switchEntryMethod('ai')" id="aiMethod">
+                        <h4>🤖 AI Screenshot Analysis</h4>
+                        <p>Extract data from screenshots</p>
+                    </div>
+                </div>
+                
+                <!-- Dashboard Section -->
+                <div id="dashboardSection" class="entry-section">
+                    <div id="platformSections">
+                        <!-- Platform sections will be populated here -->
+                    </div>
+                </div>
+                
+                <!-- Bulk Import Section -->
+                <div id="bulkSection" class="entry-section hidden">
+                    <h3>📋 Bulk CSV Import</h3>
+                    
+                    <div class="csv-upload-section">
+                        <div class="csv-input-methods">
+                            <div class="csv-method active" onclick="switchCSVMethod('paste')" id="pasteMethod">
+                                <h4>📝 Paste CSV Data</h4>
+                                <p>Copy and paste CSV text</p>
+                            </div>
+                            <div class="csv-method" onclick="switchCSVMethod('upload')" id="uploadMethod">
+                                <h4>📁 Upload CSV File</h4>
+                                <p>Upload a .csv file from computer</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Paste CSV Section -->
+                        <div id="pasteCSVSection">
+                            <p><strong>CSV Format:</strong> Platform, Post Type, Views, Likes, Comments, Shares, New Followers, Engagement Rate (optional)</p>
+                            <textarea class="bulk-input" id="csvInput" placeholder="Platform,Post Type,Views,Likes,Comments,Shares,New Followers,Engagement Rate
+Instagram,Reel,1250,89,12,5,3,8.48%
+Facebook,Post,456,23,8,2,1,7.24%"></textarea>
+                            <button onclick="processBulkData()" style="margin-top: 15px;">Process CSV Data</button>
+                        </div>
+                        
+                        <!-- Upload CSV Section -->
+                        <div id="uploadCSVSection" class="hidden">
+                            <p><strong>Upload a CSV file with headers:</strong> Platform, Post Type, Views, Likes, Comments, Shares, New Followers</p>
+                            <input type="file" id="csvFileInput" accept=".csv" style="margin-bottom: 15px;">
+                            <button onclick="processCSVFile()" style="margin-top: 15px;">Process CSV File</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI Screenshot Analysis Section -->
+                <div id="aiSection" class="entry-section hidden">
+                    <div id="apiKeySection" class="api-key-section">
+                        <h3>🔑 OpenAI API Key Setup</h3>
+                        <p>To use AI screenshot analysis, enter your OpenAI API key. This key is stored securely in your browser session.</p>
+                        
+                        <div style="display: flex; gap: 10px; align-items: center; margin: 20px 0;">
+                            <input type="password" id="openaiApiKey" placeholder="sk-proj-..." style="flex: 1;" onchange="validateApiKey()" oninput="validateApiKey()">
+                            <button onclick="saveApiKey()" id="saveApiKeyBtn" disabled>Save Key</button>
+                            <button onclick="clearApiKey()" id="clearApiKeyBtn" style="background: #e53e3e;" disabled>Clear</button>
+                        </div>
+                        
+                        <div class="api-key-info">
+                            <p><strong>How to get your OpenAI API Key:</strong></p>
+                            <ol>
+                                <li>Go to <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a></li>
+                                <li>Sign in or create an OpenAI account</li>
+                                <li>Click "Create new secret key"</li>
+                                <li>Copy the key and paste it above</li>
+                                <li>Add $5-10 in credits to your account</li>
+                            </ol>
+                            <p><strong>Cost:</strong> ~$0.01 per screenshot analyzed</p>
+                        </div>
+                        
+                        <div id="apiKeyStatus" class="hidden">
+                            <div class="success-message">✅ API Key configured! You can now upload screenshots for analysis.</div>
+                        </div>
+                    </div>
+                    
+                    <div id="uploadSection" class="hidden">
+                        <div class="file-drop-zone" onclick="document.getElementById('screenshotInput').click()">
+                            <p>📱 Click to upload screenshots</p>
+                            <p style="font-size: 0.9em; color: #718096;">Supports: Instagram, TikTok, Facebook, Threads analytics screenshots</p>
+                            <p style="font-size: 0.8em; color: #a0aec0;">PNG, JPG, JPEG formats</p>
+                        </div>
+                        <input type="file" id="screenshotInput" accept="image/*" multiple style="display: none;" onchange="analyzeScreenshots(event)">
+                        
+                        <div id="analysisResults" style="margin-top: 20px;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="loading" id="loadingIndicator" style="display: none;">Loading your data...</div>
+            
+            <!-- Weekly Summary -->
+            <div class="summary-section">
+                <h2>📈 Performance Summary</h2>
+                <div class="summary-grid" id="summaryGrid">
+                    <!-- Summary cards will be generated here -->
+                </div>
+            </div>
+            
+            <!-- Time Investment -->
+            <div class="summary-section">
+                <h2>⏱️ Time Investment Analysis</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                     <div>
-                        <label for="bookTitle">Book Title</label>
-                        <input type="text" id="bookTitle" placeholder="Enter book title">
+                        <label>Content Creation (hours):</label>
+                        <input type="number" id="time-creation" step="0.5" onchange="updateTimeAnalysis(); saveData()">
                     </div>
                     <div>
-                        <label for="devCost">Development Cost ($)</label>
-                        <input type="number" id="devCost" placeholder="0.00" step="0.01">
+                        <label>Platform Management (hours):</label>
+                        <input type="number" id="time-management" step="0.5" onchange="updateTimeAnalysis(); saveData()">
                     </div>
                     <div>
-                        <label for="costCategory">Cost Category</label>
-                        <select id="costCategory">
-                            <option value="">Select category...</option>
-                            <option value="Cover Design">Cover Design</option>
-                            <option value="Editing">Editing</option>
-                            <option value="Formatting">Formatting</option>
-                            <option value="Marketing">Marketing</option>
-                            <option value="Printing">Printing</option>
-                            <option value="ISBN/Copyright">ISBN/Copyright</option>
-                            <option value="Illustration">Illustration</option>
-                            <option value="Translation">Translation</option>
-                            <option value="Software/Tools">Software/Tools</option>
-                            <option value="Other">Other</option>
+                        <label>Engagement/Responses (hours):</label>
+                        <input type="number" id="time-engagement" step="0.5" onchange="updateTimeAnalysis(); saveData()">
+                    </div>
+                    <div>
+                        <label>Analytics Review (hours):</label>
+                        <input type="number" id="time-analytics" step="0.5" onchange="updateTimeAnalysis(); saveData()">
+                    </div>
+                </div>
+                <div id="timeAnalysis" style="margin-top: 15px; padding: 15px; background: #f7fafc; border-radius: 8px;">
+                    Enter time data to see analysis
+                </div>
+            </div>
+        </div>
+        
+        <!-- Account Creation Modal -->
+        <div id="accountModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Create New Account</h3>
+                    <button class="modal-close" onclick="closeAccountModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div style="margin-bottom: 15px;">
+                        <label for="accountName"><strong>Account Name:</strong></label>
+                        <input type="text" id="accountName" placeholder="e.g., My TikTok Account, PA's TikTok Account" style="width: 100%; margin-top: 5px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label for="accountDescription"><strong>Description (Optional):</strong></label>
+                        <input type="text" id="accountDescription" placeholder="e.g., Personal account, Assistant managed account" style="width: 100%; margin-top: 5px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label for="accountColor"><strong>Color Theme:</strong></label>
+                        <select id="accountColor" style="width: 100%; margin-top: 5px;">
+                            <option value="#667eea">Blue (Default)</option>
+                            <option value="#38a169">Green</option>
+                            <option value="#d69e2e">Orange</option>
+                            <option value="#9f7aea">Purple</option>
+                            <option value="#ed64a6">Pink</option>
+                            <option value="#e53e3e">Red</option>
                         </select>
                     </div>
-                    <div>
-                        <label for="launchDate">Release Date</label>
-                        <input type="text" id="launchDate" placeholder="2025-03-15, 03/15/2025, March 15, 2025">
-                    </div>
-                    <div>
-                        <label style="opacity: 0;">Action</label>
-                        <button onclick="addBook()" id="addBookBtn">Add Book</button>
-                    </div>
                 </div>
-                
-                <div id="loadingActive" class="loading">Loading your books...</div>
-                <table id="activeTracking" class="hidden">
-                    <thead>
-                        <tr>
-                            <th>Book Title</th>
-                            <th>Dev Cost & Category</th>
-                            <th>Release Date</th>
-                            <th>Cumulative Profit</th>
-                            <th>Status</th>
-                            <th>Est. Payoff</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="activeTableBody">
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="section">
-                <h2>🔄 Quarterly Profit Updates</h2>
-                
-                <div class="quarterly-input-group">
-                    <div>
-                        <label for="updateBookSelect">Select Book</label>
-                        <select id="updateBookSelect">
-                            <option value="">Select Book to Update</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="quarterlyProfit">Quarterly Profit ($)</label>
-                        <input type="number" id="quarterlyProfit" placeholder="0.00" step="0.01">
-                    </div>
-                    <div>
-                        <label for="quarterYear">Quarter & Year or Date</label>
-                        <input type="text" id="quarterYear" placeholder="Q1 2025 or 2025-03-15">
-                    </div>
-                    <div>
-                        <label style="opacity: 0;">Action</label>
-                        <button onclick="updateQuarterlyProfit()" id="updateBtn">Add Quarterly Update</button>
-                    </div>
-                </div>
-                
-                <div class="formula-explanation">
-                    <strong>Tip:</strong> Once a book is paid off, it automatically moves to the "Paid Off" section. If you edit a paid off book and increase costs, it will move back here for continued tracking.
+                <div class="modal-footer">
+                    <button onclick="closeAccountModal()" style="background: #718096;">Cancel</button>
+                    <button onclick="saveAccount()" id="saveAccountBtn" style="background: #38a169;">Create Account</button>
                 </div>
             </div>
-            
-            <div class="section">
-                <h2>✅ Paid Off Books <span class="status-badge paid-off">COMPLETE</span></h2>
-                
-                <div id="loadingPaidOff" class="loading">Loading paid off books...</div>
-                <table id="paidOffBooks" class="hidden">
-                    <thead>
-                        <tr>
-                            <th>Book Title</th>
-                            <th>Dev Cost & Category</th>
-                            <th>Months to Payoff</th>
-                            <th>Release Date</th>
-                            <th>Payoff Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="paidOffTableBody">
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="section">
-                <h2>💾 Data Backup & Transfer</h2>
-                
-                <div class="backup-section">
-                    <div>
-                        <button onclick="exportData()" style="background: #38a169;">📥 Export Data</button>
-                    </div>
-                    <div>
-                        <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
-                        <button onclick="document.getElementById('importFile').click()" style="background: #3182ce;">📤 Import Data</button>
-                    </div>
-                    <div>
-                        <button onclick="clearAllData()" style="background: #e53e3e;">🗑️ Clear All Data</button>
+        </div>
+        
+        <!-- Account Management Modal -->
+        <div id="manageModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Manage Accounts</h3>
+                    <button class="modal-close" onclick="closeManageModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="accountsList">
+                        <!-- Account list will be populated here -->
                     </div>
                 </div>
-                
-                <div class="formula-explanation">
-                    <strong>Cloud Backup:</strong> Your data is automatically backed up to Firebase. Export for additional local backups!
+                <div class="modal-footer">
+                    <button onclick="closeManageModal()" style="background: #718096;">Close</button>
                 </div>
             </div>
         </div>
@@ -524,89 +995,217 @@
 
     <!-- Firebase SDK -->
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getFirestore, doc, setDoc, collection, getDocs, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAKlawnotAQvskSGq25tSLp9hAHakrcFww",
-            authDomain: "book-tracker-mc.firebaseapp.com",
-            projectId: "book-tracker-mc",
-            storageBucket: "book-tracker-mc.firebasestorage.app",
-            messagingSenderId: "1019118853792",
-            appId: "1:1019118853792:web:3919629c0e63a41b7b73c5",
-            measurementId: "G-S96RJCCR6Q"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
         // Global variables
+        let app, auth, db;
         let currentUser = null;
-        let books = [];
-        let paidOffBooks = [];
-        let editingBookId = null;
-        let editingPaidOffBookId = null;
-        let editingCosts = [];
-        let editingPaidOffCosts = [];
+        let postCounter = 0;
+        let initializationError = null;
+        let userApiKey = null;
+        let currentEntryMethod = 'dashboard';
+        let editingPostId = null;
+        let csvInputMethod = 'paste';
+        let currentDataRange = null; // NEW: Track currently loaded data range
+        
+        // Account management variables
+        let currentAccountId = 'default';
+        let userAccounts = {
+            'default': {
+                id: 'default',
+                name: 'Default Account',
+                description: '',
+                color: '#667eea',
+                createdAt: new Date().toISOString()
+            }
+        };
+        let editingAccountId = null;
 
-        // Make functions globally available
+        try {
+            const firebaseConfig = {
+                apiKey: "AIzaSyA0CipMJUlrp0tFKSE4T-c5a-4yBJpE8xs",
+                authDomain: "social-media-dashboard-mc.firebaseapp.com",
+                projectId: "social-media-dashboard-mc",
+                storageBucket: "social-media-dashboard-mc.firebasestorage.app",
+                messagingSenderId: "504137402125",
+                appId: "1:504137402125:web:1e00590b5f278ff14a5244",
+                measurementId: "G-WFQQNGW21G"
+            };
+
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            
+            console.log('Firebase initialized successfully');
+
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
+            initializationError = error;
+            showError(`Firebase initialization failed: ${error.message}`);
+        }
+
+        // Make functions available globally
         window.signInWithGoogle = signInWithGoogle;
         window.signOut = signOut;
-        window.addBook = addBook;
-        window.updateQuarterlyProfit = updateQuarterlyProfit;
-        window.deleteBook = deleteBook;
-        window.deletePaidOffBook = deletePaidOffBook;
-        window.editBook = editBook;
-        window.saveBookEdit = saveBookEdit;
-        window.cancelBookEdit = cancelBookEdit;
-        window.addCostRow = addCostRow;
-        window.removeCostRow = removeCostRow;
-        window.updateTotalDisplay = updateTotalDisplay;
-        window.editPaidOffBook = editPaidOffBook;
-        window.savePaidOffBookEdit = savePaidOffBookEdit;
-        window.cancelPaidOffBookEdit = cancelPaidOffBookEdit;
-        window.addPaidOffCostRow = addPaidOffCostRow;
-        window.removePaidOffCostRow = removePaidOffCostRow;
-        window.updatePaidOffTotalDisplay = updatePaidOffTotalDisplay;
-        window.updateMonthsToPayoff = updateMonthsToPayoff;
+        window.updateDateRange = updateDateRange;
+        window.setThisWeek = setThisWeek;
+        window.setLastWeek = setLastWeek;
+        window.switchEntryMethod = switchEntryMethod;
+        window.switchCSVMethod = switchCSVMethod;
+        window.togglePlatform = togglePlatform;
+        window.addPost = addPost;
+        window.editPost = editPost;
+        window.savePost = savePost;
+        window.cancelEdit = cancelEdit;
+        window.removePost = removePost;
+        window.saveData = saveData;
+        window.updateTimeAnalysis = updateTimeAnalysis;
+        window.generateReport = generateReport;
         window.exportData = exportData;
-        window.importData = importData;
-        window.clearAllData = clearAllData;
+        window.processBulkData = processBulkData;
+        window.processCSVFile = processCSVFile;
+        window.analyzeScreenshots = analyzeScreenshots;
+        window.addExtractedDataToTracker = addExtractedDataToTracker;
+        window.saveApiKey = saveApiKey;
+        window.clearApiKey = clearApiKey;
+        window.validateApiKey = validateApiKey;
+        window.calculateEngagement = calculateEngagement;
+        
+        // Account management functions
+        window.switchAccount = switchAccount;
+        window.showCreateAccountModal = showCreateAccountModal;
+        window.showManageAccountsModal = showManageAccountsModal;
+        window.closeAccountModal = closeAccountModal;
+        window.closeManageModal = closeManageModal;
+        window.saveAccount = saveAccount;
+        window.editAccount = editAccount;
+        window.deleteAccount = deleteAccount;
+        window.updateFollowersDisplay = updateFollowersDisplay;
+
+        // Initialize app
+        window.addEventListener('load', function() {
+            console.log('Window loaded, initializing...');
+            
+            // Set default to this week
+            setThisWeek();
+            initializePlatforms();
+            
+            if (!initializationError) {
+                try {
+                    onAuthStateChanged(auth, (user) => {
+                        console.log('Auth state changed:', user ? user.email : 'no user');
+                        if (user) {
+                            currentUser = user;
+                            showUserSection();
+                            loadUserData();
+                        } else {
+                            currentUser = null;
+                            showAuthSection();
+                        }
+                    });
+                } catch (error) {
+                    console.error('Auth state listener error:', error);
+                    showError(`Authentication setup failed: ${error.message}`);
+                }
+            }
+        });
 
         // Authentication functions
         async function signInWithGoogle() {
-            const provider = new GoogleAuthProvider();
+            console.log('Sign in button clicked');
+            
+            if (initializationError) {
+                showError('Firebase is not properly initialized. Please refresh the page.');
+                return;
+            }
+
+            const signInBtn = document.getElementById('signInBtn');
+            signInBtn.disabled = true;
+            signInBtn.textContent = 'Signing in...';
+            
+            hideError();
+
             try {
-                await signInWithPopup(auth, provider);
+                const provider = new GoogleAuthProvider();
+                provider.addScope('email');
+                provider.addScope('profile');
+                provider.setCustomParameters({
+                    prompt: 'select_account'
+                });
+
+                const result = await signInWithPopup(auth, provider);
+                console.log('Sign in successful:', result.user.email);
+                
             } catch (error) {
-                console.error('Error signing in:', error);
-                alert('Failed to sign in. Please try again.');
+                console.error('Sign in error:', error);
+                
+                let errorMessage = 'Unknown error occurred';
+                
+                switch (error.code) {
+                    case 'auth/popup-blocked':
+                        errorMessage = 'Popup was blocked by your browser. Please allow popups for this site and try again.';
+                        break;
+                    case 'auth/popup-closed-by-user':
+                        errorMessage = 'Sign-in was cancelled. Please try again.';
+                        break;
+                    case 'auth/unauthorized-domain':
+                        errorMessage = 'This domain is not authorized for OAuth operations. Please contact support.';
+                        break;
+                    case 'auth/operation-not-allowed':
+                        errorMessage = 'Google Sign-In is not enabled. Please contact support.';
+                        break;
+                    default:
+                        errorMessage = `Authentication failed: ${error.message}`;
+                        break;
+                }
+                
+                showError(errorMessage);
+                
+            } finally {
+                signInBtn.disabled = false;
+                signInBtn.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Sign in with Google
+                `;
             }
         }
 
         async function signOut() {
+            if (initializationError) {
+                showError('Firebase is not properly initialized.');
+                return;
+            }
+
             try {
+                userApiKey = null;
                 await firebaseSignOut(auth);
+                console.log('Sign out successful');
+                hideError();
             } catch (error) {
-                console.error('Error signing out:', error);
+                console.error('Sign out error:', error);
+                showError(`Sign out failed: ${error.message}`);
             }
         }
 
-        // Auth state observer
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                showUserSection();
-                loadUserData();
-            } else {
-                currentUser = null;
-                showAuthSection();
-            }
-        });
+        // UI Helper Functions
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').classList.add('hidden');
+        }
 
         function showAuthSection() {
             document.getElementById('authSection').classList.remove('hidden');
@@ -619,945 +1218,1883 @@
             document.getElementById('userSection').classList.remove('hidden');
             document.getElementById('appContent').classList.remove('hidden');
             
-            // Update user info
-            document.getElementById('userName').textContent = currentUser.displayName;
+            document.getElementById('userName').textContent = currentUser.displayName || 'User';
             document.getElementById('userEmail').textContent = currentUser.email;
-            document.getElementById('userAvatar').src = currentUser.photoURL;
+            document.getElementById('userAvatar').src = currentUser.photoURL || '';
+            
+            hideError();
+            document.getElementById('debugInfo').classList.add('hidden');
+            
+            checkApiKeyStatus();
+            loadUserAccounts(); // Load user's accounts
         }
 
-        // Data functions
+        // ENHANCED Data functions with improved date range handling
         async function loadUserData() {
-            if (!currentUser) return;
+            if (!currentUser || initializationError) return;
+
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            loadingIndicator.style.display = 'block';
 
             try {
-                // Load active books
-                const activeRef = collection(db, 'users', currentUser.uid, 'activeBooks');
-                const activeSnapshot = await getDocs(activeRef);
-                books = activeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const startDate = document.getElementById('startDatePicker').value;
+                const endDate = document.getElementById('endDatePicker').value;
+                
+                if (!startDate) {
+                    loadingIndicator.style.display = 'none';
+                    return;
+                }
+                
+                // First try to load data for the exact start date
+                let docRef = doc(db, 'users', currentUser.uid, 'accounts', currentAccountId, 'dateRanges', startDate);
+                let docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const rangeData = docSnap.data();
+                    console.log('Loading data for account:', currentAccountId, 'range:', startDate, rangeData);
+                    currentDataRange = rangeData; // Store the loaded range
+                    populateFormWithData(rangeData);
+                    showDateRangeInfo(rangeData.startDate, rangeData.endDate);
+                } else {
+                    // If no exact match, search for any saved date range that overlaps with our selected dates
+                    const foundData = await findDataInDateRange(startDate, endDate);
+                    
+                    if (foundData) {
+                        console.log('Found overlapping data for account:', currentAccountId, foundData);
+                        currentDataRange = foundData; // Store the loaded range
+                        populateFormWithData(foundData);
+                        showDateRangeInfo(foundData.startDate, foundData.endDate);
+                    } else {
+                        console.log('No data found for account:', currentAccountId, 'date range:', startDate);
+                        currentDataRange = null;
+                        hideDateRangeInfo();
+                        
+                        // If this is the default account and no data found, try to migrate old data
+                        if (currentAccountId === 'default') {
+                            const migrated = await migrateOldDataIfExists(startDate);
+                            if (!migrated) {
+                                clearAllPlatformPosts();
+                            }
+                        } else {
+                            clearAllPlatformPosts();
+                        }
+                    }
+                }
 
-                // Load paid off books
-                const paidOffRef = collection(db, 'users', currentUser.uid, 'paidOffBooks');
-                const paidOffSnapshot = await getDocs(paidOffRef);
-                paidOffBooks = paidOffSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                renderTables();
+                loadingIndicator.style.display = 'none';
             } catch (error) {
                 console.error('Error loading data:', error);
-                alert('Failed to load your data. Please refresh the page.');
+                loadingIndicator.style.display = 'none';
+                showError(`Failed to load data: ${error.message}`);
             }
         }
 
-        async function saveBookToFirebase(book, collection_name = 'activeBooks') {
-            if (!currentUser) return;
+        // NEW: Function to find data within a date range
+        async function findDataInDateRange(selectedStartDate, selectedEndDate) {
+            try {
+                const dateRangesRef = collection(db, 'users', currentUser.uid, 'accounts', currentAccountId, 'dateRanges');
+                const snapshot = await getDocs(dateRangesRef);
+                
+                const selectedStart = new Date(selectedStartDate);
+                const selectedEnd = new Date(selectedEndDate || selectedStartDate);
+                
+                for (const docSnap of snapshot.docs) {
+                    const data = docSnap.data();
+                    const dataStartDate = new Date(data.startDate);
+                    const dataEndDate = new Date(data.endDate || data.startDate);
+                    
+                    // Check if there's any overlap between the selected range and saved range
+                    const hasOverlap = (selectedStart <= dataEndDate && selectedEnd >= dataStartDate);
+                    
+                    if (hasOverlap) {
+                        console.log('Found overlapping range:', data.startDate, 'to', data.endDate, 'for selected:', selectedStartDate, 'to', selectedEndDate);
+                        return data;
+                    }
+                }
+                
+                return null;
+            } catch (error) {
+                console.error('Error searching date ranges:', error);
+                return null;
+            }
+        }
+
+        // NEW: Show which date range data was found for
+        function showDateRangeInfo(dataStartDate, dataEndDate) {
+            const infoElement = document.getElementById('dateRangeInfo');
+            const textElement = document.getElementById('dataRangeText');
+            
+            const startFormatted = new Date(dataStartDate).toLocaleDateString();
+            const endFormatted = new Date(dataEndDate).toLocaleDateString();
+            
+            textElement.textContent = `Showing data from ${startFormatted} to ${endFormatted}`;
+            infoElement.classList.remove('hidden');
+        }
+
+        // NEW: Hide date range info
+        function hideDateRangeInfo() {
+            const infoElement = document.getElementById('dateRangeInfo');
+            infoElement.classList.add('hidden');
+        }
+
+        // Migration function to move old data to default account
+        async function migrateOldDataIfExists(startDate) {
+            try {
+                // Check if data exists in the old location
+                const oldDocRef = doc(db, 'users', currentUser.uid, 'dateRanges', startDate);
+                const oldDocSnap = await getDoc(oldDocRef);
+                
+                if (oldDocSnap.exists()) {
+                    console.log('Found old data, migrating to default account...');
+                    const oldData = oldDocSnap.data();
+                    
+                    // Save to new location (default account)
+                    const newDocRef = doc(db, 'users', currentUser.uid, 'accounts', 'default', 'dateRanges', startDate);
+                    await setDoc(newDocRef, oldData);
+                    
+                    // Delete from old location
+                    await deleteDoc(oldDocRef);
+                    
+                    console.log('Migration completed for date:', startDate);
+                    currentDataRange = oldData; // Store the loaded range
+                    populateFormWithData(oldData);
+                    showDateRangeInfo(oldData.startDate, oldData.endDate);
+                    
+                    // Show migration notice
+                    showMigrationNotice();
+                    
+                    return true; // Successfully migrated
+                }
+            } catch (error) {
+                console.error('Migration error:', error);
+            }
+            
+            return false; // No migration performed
+        }
+
+        function showMigrationNotice() {
+            const noticeElement = document.getElementById('migrationNotice');
+            noticeElement.classList.remove('hidden');
+            
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                noticeElement.classList.add('hidden');
+            }, 10000);
+        }
+
+        function clearAllPlatformPosts() {
+            const platforms = ['instagram', 'facebook', 'threads', 'tiktok', 'pinterest'];
+            platforms.forEach(platform => {
+                const container = document.getElementById(platform + '-posts');
+                if (container) {
+                    container.innerHTML = '';
+                }
+                updatePlatformSummary(platform);
+            });
+            postCounter = 0; // Reset counter when clearing
+        }
+
+        // ENHANCED: Save data to the original date range, not the currently selected dates
+        async function saveData() {
+            if (!currentUser || initializationError) return;
 
             try {
-                const docRef = doc(db, 'users', currentUser.uid, collection_name, book.id.toString());
-                await setDoc(docRef, book);
+                const rangeData = collectCurrentRangeData();
+                
+                // Use the original data range if it exists, otherwise use selected dates
+                const saveStartDate = currentDataRange ? currentDataRange.startDate : document.getElementById('startDatePicker').value;
+                
+                if (!saveStartDate) return;
+                
+                console.log('Saving data for account:', currentAccountId, 'range:', saveStartDate, rangeData);
+                
+                // Save data for specific account using the original start date
+                const docRef = doc(db, 'users', currentUser.uid, 'accounts', currentAccountId, 'dateRanges', saveStartDate);
+                await setDoc(docRef, rangeData, { merge: true });
+                console.log('Data saved successfully');
             } catch (error) {
-                console.error('Error saving book:', error);
-                throw error;
+                console.error('Error saving data:', error);
+                showError(`Failed to save data: ${error.message}`);
             }
         }
 
-        async function deleteBookFromFirebase(bookId, collection_name = 'activeBooks') {
-            if (!currentUser) return;
-
-            try {
-                const docRef = doc(db, 'users', currentUser.uid, collection_name, bookId.toString());
-                await deleteDoc(docRef);
-            } catch (error) {
-                console.error('Error deleting book:', error);
-                throw error;
-            }
-        }
-
-        // Utility functions
-        function parseFlexibleDate(input) {
-            if (!input || input.trim() === '') return null;
+        function collectCurrentRangeData() {
+            // Use original range dates if available, otherwise use current picker values
+            const startDate = currentDataRange ? currentDataRange.startDate : document.getElementById('startDatePicker').value;
+            const endDate = currentDataRange ? currentDataRange.endDate : document.getElementById('endDatePicker').value;
             
-            const trimmedInput = input.trim();
-            
-            // Try multiple date parsing approaches
-            let dateAttempt;
-            
-            // Try parsing MM/DD/YYYY format specifically first
-            const mmddyyyyMatch = trimmedInput.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-            if (mmddyyyyMatch) {
-                const [, month, day, year] = mmddyyyyMatch;
-                dateAttempt = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                if (!isNaN(dateAttempt.getTime())) {
-                    return dateAttempt;
-                }
-            }
-            
-            // Try parsing YYYY-MM-DD format specifically
-            const yyyymmddMatch = trimmedInput.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-            if (yyyymmddMatch) {
-                const [, year, month, day] = yyyymmddMatch;
-                dateAttempt = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                if (!isNaN(dateAttempt.getTime())) {
-                    return dateAttempt;
-                }
-            }
-            
-            // Try direct parsing for natural language dates
-            dateAttempt = new Date(trimmedInput);
-            if (!isNaN(dateAttempt.getTime()) && dateAttempt.getFullYear() > 1900) {
-                return new Date(dateAttempt.getFullYear(), dateAttempt.getMonth(), dateAttempt.getDate());
-            }
-            
-            return null;
-        }
-
-        function formatDateForDisplay(dateInput) {
-            if (!dateInput) return 'TBD';
-            
-            const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-            if (isNaN(date.getTime())) return 'TBD';
-            
-            return date.toLocaleDateString();
-        }
-
-        function formatDateForInput(dateInput) {
-            if (!dateInput) return '';
-            
-            const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-            if (isNaN(date.getTime())) return '';
-            
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            
-            return `${year}-${month}-${day}`;
-        }
-
-        function parseQuarterOrDateToDate(input) {
-            // First try to parse as a quarter format "Q1 2023"
-            const quarterMatch = input.match(/^Q([1-4])\s+(\d{4})$/);
-            if (quarterMatch) {
-                const quarterNum = parseInt(quarterMatch[1]);
-                const year = parseInt(quarterMatch[2]);
-                
-                const quarterEndMonths = {
-                    1: 2,  // Q1 ends in March
-                    2: 5,  // Q2 ends in June
-                    3: 8,  // Q3 ends in September
-                    4: 11  // Q4 ends in December
-                };
-                
-                const month = quarterEndMonths[quarterNum];
-                const lastDay = new Date(year, month + 1, 0).getDate();
-                
-                return new Date(year, month, lastDay);
-            }
-            
-            const dateAttempt = parseFlexibleDate(input);
-            if (dateAttempt) {
-                return dateAttempt;
-            }
-            
-            return new Date();
-        }
-
-        function calculateMonthsToPayoff(book, payoffDate = null) {
-            if (!book.launchDate) return 0;
-            
-            const launchDate = new Date(book.launchDate);
-            const endDate = payoffDate || new Date();
-            const diffInMonths = (endDate.getFullYear() - launchDate.getFullYear()) * 12 + 
-                               (endDate.getMonth() - launchDate.getMonth());
-            return Math.max(0, diffInMonths);
-        }
-
-        function estimatePayoffQuarters(book) {
-            if (!book.devCost || book.devCost === 0) return "No costs to pay off";
-            if (book.quarterlyUpdates.length === 0) return "Need data";
-            
-            const avgQuarterlyProfit = book.cumulativeProfit / book.quarterlyUpdates.length;
-            const remaining = book.devCost - book.cumulativeProfit;
-            
-            if (remaining <= 0) return "Paid off!";
-            if (avgQuarterlyProfit <= 0) return "No profit yet";
-            
-            const quartersRemaining = Math.ceil(remaining / avgQuarterlyProfit);
-            return `~${quartersRemaining} quarters`;
-        }
-
-        function updateMonthsToPayoff(bookId) {
-            const book = paidOffBooks.find(b => b.id === bookId);
-            if (!book) return;
-
-            const row = document.querySelector(`tr[data-paid-off-book-id="${bookId}"]`);
-            if (!row) return;
-
-            const launchDateInput = row.querySelector('.edit-paid-off-launch-date');
-            const payoffDateInput = row.querySelector('.edit-paid-off-payoff-date');
-            const monthsInput = row.querySelector('.edit-paid-off-months');
-
-            const launchDateStr = launchDateInput.value.trim();
-            const payoffDateStr = payoffDateInput.value.trim();
-
-            if (launchDateStr && payoffDateStr) {
-                const launchDate = parseFlexibleDate(launchDateStr);
-                const payoffDate = parseFlexibleDate(payoffDateStr);
-                
-                if (launchDate && payoffDate) {
-                    const diffInMonths = (payoffDate.getFullYear() - launchDate.getFullYear()) * 12 + 
-                                       (payoffDate.getMonth() - launchDate.getMonth());
-                    
-                    const months = Math.max(0, diffInMonths);
-                    monthsInput.value = months;
-                }
-            }
-        }
-
-        // App functions
-        async function addBook() {
-            if (!currentUser) {
-                alert('Please sign in first');
-                return;
-            }
-
-            const title = document.getElementById('bookTitle').value.trim();
-            const devCost = parseFloat(document.getElementById('devCost').value) || 0;
-            const costCategory = document.getElementById('costCategory').value;
-            const launchDate = document.getElementById('launchDate').value.trim();
-
-            if (!title) {
-                alert('Please enter a book title');
-                return;
-            }
-
-            const addBookBtn = document.getElementById('addBookBtn');
-            addBookBtn.disabled = true;
-            addBookBtn.textContent = 'Adding...';
-
-            try {
-                const parsedLaunchDate = launchDate ? parseFlexibleDate(launchDate) : null;
-                
-                const newBook = {
-                    id: Date.now(),
-                    title,
-                    devCost: devCost || 0,
-                    costBreakdown: devCost > 0 ? [{
-                        category: costCategory || 'Unspecified',
-                        amount: devCost
-                    }] : [],
-                    launchDate: parsedLaunchDate ? parsedLaunchDate.toISOString() : null,
-                    quarterlyUpdates: [],
-                    cumulativeProfit: 0,
-                    createdAt: new Date().toISOString()
-                };
-
-                await saveBookToFirebase(newBook);
-                books.push(newBook);
-                clearInputs();
-                renderTables();
-                alert(`Book "${title}" added successfully! ${devCost > 0 ? 'Use "Edit" to add more development costs.' : 'Use "Edit" to add development costs when you have them.'}`);
-            } catch (error) {
-                console.error('Error adding book:', error);
-                alert('Failed to add book. Please try again.');
-            } finally {
-                addBookBtn.disabled = false;
-                addBookBtn.textContent = 'Add Book';
-            }
-        }
-
-        // Active book editing functions
-        async function editBook(bookId) {
-            editingBookId = bookId;
-            const book = books.find(b => b.id === bookId);
-            
-            if (book.costBreakdown && book.costBreakdown.length > 0) {
-                editingCosts = [...book.costBreakdown];
-            } else {
-                editingCosts = book.devCost > 0 ? [{
-                    category: book.costCategory || 'Unspecified',
-                    amount: book.devCost
-                }] : [{
-                    category: 'Unspecified',
-                    amount: 0
-                }];
-            }
-            
-            renderTables();
-        }
-
-        function addCostRow() {
-            updateEditingCostsFromDOM();
-            
-            editingCosts.push({
-                category: 'Other',
-                amount: 0
-            });
-            renderTables();
-        }
-
-        function removeCostRow(index) {
-            if (editingCosts.length > 1) {
-                updateEditingCostsFromDOM();
-                
-                editingCosts.splice(index, 1);
-                renderTables();
-            } else {
-                alert('A book must have at least one cost entry.');
-            }
-        }
-
-        function updateEditingCostsFromDOM() {
-            if (!editingBookId) return;
-            
-            const row = document.querySelector(`tr[data-book-id="${editingBookId}"]`);
-            if (!row) return;
-            
-            const costInputs = row.querySelectorAll('.edit-cost-amount');
-            const categorySelects = row.querySelectorAll('.edit-cost-category');
-            
-            for (let i = 0; i < Math.min(costInputs.length, editingCosts.length); i++) {
-                editingCosts[i].amount = parseFloat(costInputs[i].value) || 0;
-                editingCosts[i].category = categorySelects[i].value || 'Unspecified';
-            }
-            
-            const dateInput = row.querySelector('.edit-date');
-            if (dateInput) {
-                editingCosts._tempReleaseDate = dateInput.value;
-            }
-        }
-
-        function updateTotalDisplay() {
-            if (!editingBookId) return;
-            
-            const row = document.querySelector(`tr[data-book-id="${editingBookId}"]`);
-            if (!row) return;
-            
-            const costInputs = row.querySelectorAll('.edit-cost-amount');
-            let total = 0;
-            
-            costInputs.forEach(input => {
-                const value = parseFloat(input.value) || 0;
-                total += value;
-            });
-            
-            const totalDisplay = document.getElementById('editingTotal');
-            if (totalDisplay) {
-                totalDisplay.textContent = `Total: $${total.toFixed(2)}`;
-            }
-        }
-
-        async function saveBookEdit(bookId) {
-            const book = books.find(b => b.id === bookId);
-            if (!book) return;
-
-            const row = document.querySelector(`tr[data-book-id="${bookId}"]`);
-            const titleInput = row.querySelector('.edit-title');
-            const dateInput = row.querySelector('.edit-date');
-            const costInputs = row.querySelectorAll('.edit-cost-amount');
-            const categorySelects = row.querySelectorAll('.edit-cost-category');
-
-            const newTitle = titleInput.value.trim();
-            const newDate = dateInput.value.trim();
-
-            if (!newTitle) {
-                alert('Please fill in the title');
-                return;
-            }
-
-            const newCostBreakdown = [];
-            let totalCost = 0;
-
-            for (let i = 0; i < costInputs.length; i++) {
-                const amount = parseFloat(costInputs[i].value);
-                const category = categorySelects[i].value;
-
-                if (isNaN(amount) || amount < 0) {
-                    alert(`Please enter a valid amount for cost #${i + 1} (or 0 if no cost)`);
-                    return;
-                }
-
-                if (amount > 0) {
-                    newCostBreakdown.push({
-                        category: category || 'Unspecified',
-                        amount: amount
-                    });
-                    totalCost += amount;
-                }
-            }
-
-            try {
-                const parsedDate = newDate ? parseFlexibleDate(newDate) : null;
-                
-                book.title = newTitle;
-                book.launchDate = parsedDate ? parsedDate.toISOString() : null;
-                book.costBreakdown = newCostBreakdown;
-                book.devCost = totalCost;
-
-                await saveBookToFirebase(book);
-                editingBookId = null;
-                editingCosts = [];
-                renderTables();
-                alert(`Book updated successfully! Total development cost: $${totalCost.toFixed(2)}`);
-            } catch (error) {
-                console.error('Error updating book:', error);
-                alert('Failed to update book. Please try again.');
-            }
-        }
-
-        function cancelBookEdit() {
-            editingBookId = null;
-            editingCosts = [];
-            renderTables();
-        }
-
-        // Paid off book editing functions
-        async function editPaidOffBook(bookId) {
-            editingPaidOffBookId = bookId;
-            const book = paidOffBooks.find(b => b.id === bookId);
-            
-            if (book.costBreakdown && book.costBreakdown.length > 0) {
-                editingPaidOffCosts = [...book.costBreakdown];
-            } else {
-                editingPaidOffCosts = [{
-                    category: book.costCategory || 'Unspecified',
-                    amount: book.devCost || 0
-                }];
-            }
-            
-            renderTables();
-        }
-
-        function addPaidOffCostRow() {
-            updatePaidOffEditingCostsFromDOM();
-            
-            editingPaidOffCosts.push({
-                category: 'Other',
-                amount: 0
-            });
-            renderTables();
-        }
-
-        function removePaidOffCostRow(index) {
-            if (editingPaidOffCosts.length > 1) {
-                updatePaidOffEditingCostsFromDOM();
-                
-                editingPaidOffCosts.splice(index, 1);
-                renderTables();
-            } else {
-                alert('A book must have at least one cost entry.');
-            }
-        }
-
-        function updatePaidOffEditingCostsFromDOM() {
-            if (!editingPaidOffBookId) return;
-            
-            const row = document.querySelector(`tr[data-paid-off-book-id="${editingPaidOffBookId}"]`);
-            if (!row) return;
-            
-            const costInputs = row.querySelectorAll('.edit-paid-off-cost-amount');
-            const categorySelects = row.querySelectorAll('.edit-paid-off-cost-category');
-            
-            for (let i = 0; i < Math.min(costInputs.length, editingPaidOffCosts.length); i++) {
-                editingPaidOffCosts[i].amount = parseFloat(costInputs[i].value) || 0;
-                editingPaidOffCosts[i].category = categorySelects[i].value || 'Unspecified';
-            }
-        }
-
-        function updatePaidOffTotalDisplay() {
-            if (!editingPaidOffBookId) return;
-            
-            const row = document.querySelector(`tr[data-paid-off-book-id="${editingPaidOffBookId}"]`);
-            if (!row) return;
-            
-            const costInputs = row.querySelectorAll('.edit-paid-off-cost-amount');
-            let total = 0;
-            
-            costInputs.forEach(input => {
-                const value = parseFloat(input.value) || 0;
-                total += value;
-            });
-            
-            const totalDisplay = document.getElementById('editingPaidOffTotal');
-            if (totalDisplay) {
-                totalDisplay.textContent = `Total: $${total.toFixed(2)}`;
-            }
-        }
-
-        async function savePaidOffBookEdit(bookId) {
-            const book = paidOffBooks.find(b => b.id === bookId);
-            if (!book) return;
-
-            const row = document.querySelector(`tr[data-paid-off-book-id="${bookId}"]`);
-            const titleInput = row.querySelector('.edit-paid-off-title');
-            const monthsInput = row.querySelector('.edit-paid-off-months');
-            const launchDateInput = row.querySelector('.edit-paid-off-launch-date');
-            const payoffDateInput = row.querySelector('.edit-paid-off-payoff-date');
-            const costInputs = row.querySelectorAll('.edit-paid-off-cost-amount');
-            const categorySelects = row.querySelectorAll('.edit-paid-off-cost-category');
-
-            const newTitle = titleInput.value.trim();
-            const newMonths = parseInt(monthsInput.value);
-            const newLaunchDate = launchDateInput.value.trim();
-            const newPayoffDate = payoffDateInput.value.trim();
-
-            if (!newTitle) {
-                alert('Please fill in the title');
-                return;
-            }
-
-            const newCostBreakdown = [];
-            let totalCost = 0;
-
-            for (let i = 0; i < costInputs.length; i++) {
-                const amount = parseFloat(costInputs[i].value);
-                const category = categorySelects[i].value;
-
-                if (isNaN(amount) || amount < 0) {
-                    alert(`Please enter a valid amount for cost #${i + 1} (or 0 if no cost)`);
-                    return;
-                }
-
-                if (amount > 0) {
-                    newCostBreakdown.push({
-                        category: category || 'Unspecified',
-                        amount: amount
-                    });
-                    totalCost += amount;
-                }
-            }
-
-            try {
-                const parsedLaunchDate = newLaunchDate ? parseFlexibleDate(newLaunchDate) : null;
-                const parsedPayoffDate = newPayoffDate ? parseFlexibleDate(newPayoffDate) : null;
-                
-                book.title = newTitle;
-                book.monthsToPayoff = isNaN(newMonths) ? 0 : newMonths;
-                book.launchDate = parsedLaunchDate ? parsedLaunchDate.toISOString() : null;
-                book.payoffDate = parsedPayoffDate ? parsedPayoffDate.toISOString() : book.payoffDate;
-                book.costBreakdown = newCostBreakdown;
-                book.devCost = totalCost;
-
-                if (book.cumulativeProfit < totalCost) {
-                    const activeBook = {
-                        id: book.id,
-                        title: book.title,
-                        devCost: totalCost,
-                        costBreakdown: newCostBreakdown,
-                        launchDate: book.launchDate,
-                        quarterlyUpdates: book.quarterlyUpdates || [],
-                        cumulativeProfit: book.cumulativeProfit || 0,
-                        createdAt: book.createdAt || new Date().toISOString()
-                    };
-
-                    await saveBookToFirebase(activeBook, 'activeBooks');
-                    await deleteBookFromFirebase(book.id, 'paidOffBooks');
-                    
-                    books.push(activeBook);
-                    paidOffBooks = paidOffBooks.filter(b => b.id !== book.id);
-                    
-                    alert(`Book moved back to active tracking due to increased costs! New total: $${totalCost.toFixed(2)}`);
-                } else {
-                    await saveBookToFirebase(book, 'paidOffBooks');
-                    alert(`Paid off book updated successfully! Total development cost: $${totalCost.toFixed(2)}`);
-                }
-
-                editingPaidOffBookId = null;
-                editingPaidOffCosts = [];
-                renderTables();
-            } catch (error) {
-                console.error('Error updating paid off book:', error);
-                alert('Failed to update book. Please try again.');
-            }
-        }
-
-        function cancelPaidOffBookEdit() {
-            editingPaidOffBookId = null;
-            editingPaidOffCosts = [];
-            renderTables();
-        }
-
-        async function updateQuarterlyProfit() {
-            if (!currentUser) {
-                alert('Please sign in first');
-                return;
-            }
-
-            const bookId = parseInt(document.getElementById('updateBookSelect').value);
-            const profit = parseFloat(document.getElementById('quarterlyProfit').value);
-            const quarter = document.getElementById('quarterYear').value;
-
-            if (!bookId || isNaN(profit) || !quarter) {
-                alert('Please fill in all fields');
-                return;
-            }
-
-            const updateBtn = document.getElementById('updateBtn');
-            updateBtn.disabled = true;
-            updateBtn.textContent = 'Updating...';
-
-            try {
-                const bookIndex = books.findIndex(book => book.id === bookId);
-                if (bookIndex === -1) return;
-
-                books[bookIndex].quarterlyUpdates.push({
-                    quarter,
-                    profit,
-                    date: new Date().toISOString()
-                });
-
-                books[bookIndex].cumulativeProfit += profit;
-
-                if (books[bookIndex].cumulativeProfit >= books[bookIndex].devCost && books[bookIndex].devCost > 0) {
-                    const payoffDate = parseQuarterOrDateToDate(quarter);
-                    
-                    const paidOffBook = {
-                        ...books[bookIndex],
-                        payoffDate: payoffDate.toISOString(),
-                        monthsToPayoff: calculateMonthsToPayoff(books[bookIndex], payoffDate),
-                        finalProfit: books[bookIndex].cumulativeProfit,
-                        payoffQuarter: quarter
-                    };
-                    
-                    await saveBookToFirebase(paidOffBook, 'paidOffBooks');
-                    await deleteBookFromFirebase(bookId, 'activeBooks');
-                    
-                    paidOffBooks.push(paidOffBook);
-                    books.splice(bookIndex, 1);
-                    
-                    alert(`🎉 "${paidOffBook.title}" is now paid off!`);
-                } else {
-                    await saveBookToFirebase(books[bookIndex]);
-                }
-
-                document.getElementById('updateBookSelect').value = '';
-                document.getElementById('quarterlyProfit').value = '';
-                document.getElementById('quarterYear').value = '';
-                
-                renderTables();
-            } catch (error) {
-                alert('Failed to update book. Please try again.');
-            } finally {
-                updateBtn.disabled = false;
-                updateBtn.textContent = 'Add Quarterly Update';
-            }
-        }
-
-        async function deleteBook(bookId) {
-            if (!currentUser) return;
-
-            if (confirm('Are you sure you want to delete this book?')) {
-                try {
-                    await deleteBookFromFirebase(bookId);
-                    books = books.filter(book => book.id !== bookId);
-                    renderTables();
-                    alert('Book deleted successfully!');
-                } catch (error) {
-                    alert('Failed to delete book. Please try again.');
-                }
-            }
-        }
-
-        async function deletePaidOffBook(bookId) {
-            if (!currentUser) return;
-
-            if (confirm('Are you sure you want to delete this paid off book?')) {
-                try {
-                    await deleteBookFromFirebase(bookId, 'paidOffBooks');
-                    paidOffBooks = paidOffBooks.filter(book => book.id !== bookId);
-                    renderTables();
-                    alert('Paid off book deleted successfully!');
-                } catch (error) {
-                    alert('Failed to delete paid off book. Please try again.');
-                }
-            }
-        }
-
-        function clearInputs() {
-            document.getElementById('bookTitle').value = '';
-            document.getElementById('devCost').value = '';
-            document.getElementById('costCategory').value = '';
-            document.getElementById('launchDate').value = '';
-        }
-
-        function renderTables() {
-            document.getElementById('loadingActive').classList.add('hidden');
-            document.getElementById('loadingPaidOff').classList.add('hidden');
-            document.getElementById('activeTracking').classList.remove('hidden');
-            document.getElementById('paidOffBooks').classList.remove('hidden');
-
-            // Render active tracking table
-            const activeTableBody = document.getElementById('activeTableBody');
-            activeTableBody.innerHTML = '';
-
-            books.forEach(book => {
-                const row = document.createElement('tr');
-                row.setAttribute('data-book-id', book.id);
-                
-                const remaining = book.devCost - book.cumulativeProfit;
-                const status = book.devCost === 0 ? 'No costs to track' : 
-                              remaining <= 0 ? 'Paid Off!' : `$${remaining.toFixed(2)} remaining`;
-                const profitClass = book.cumulativeProfit >= 0 ? 'profit-positive' : 'profit-negative';
-
-                if (editingBookId === book.id) {
-                    row.classList.add('edit-row');
-                    
-                    const savedReleaseDate = editingCosts._tempReleaseDate || (book.launchDate ? formatDateForInput(book.launchDate) : '');
-                    
-                    let costsHtml = '';
-                    editingCosts.forEach((cost, index) => {
-                        costsHtml += `
-                            <div class="cost-row">
-                                <select class="edit-input edit-cost-category" onchange="updateTotalDisplay()">
-                                    <option value="Cover Design" ${cost.category === 'Cover Design' ? 'selected' : ''}>Cover Design</option>
-                                    <option value="Editing" ${cost.category === 'Editing' ? 'selected' : ''}>Editing</option>
-                                    <option value="Formatting" ${cost.category === 'Formatting' ? 'selected' : ''}>Formatting</option>
-                                    <option value="Marketing" ${cost.category === 'Marketing' ? 'selected' : ''}>Marketing</option>
-                                    <option value="Printing" ${cost.category === 'Printing' ? 'selected' : ''}>Printing</option>
-                                    <option value="ISBN/Copyright" ${cost.category === 'ISBN/Copyright' ? 'selected' : ''}>ISBN/Copyright</option>
-                                    <option value="Illustration" ${cost.category === 'Illustration' ? 'selected' : ''}>Illustration</option>
-                                    <option value="Translation" ${cost.category === 'Translation' ? 'selected' : ''}>Translation</option>
-                                    <option value="Software/Tools" ${cost.category === 'Software/Tools' ? 'selected' : ''}>Software/Tools</option>
-                                    <option value="Other" ${cost.category === 'Other' ? 'selected' : ''}>Other</option>
-                                    <option value="Unspecified" ${cost.category === 'Unspecified' ? 'selected' : ''}>Unspecified</option>
-                                </select>
-                                <input type="number" class="edit-input edit-cost-amount" value="${cost.amount}" step="0.01" oninput="updateTotalDisplay()">
-                                ${editingCosts.length > 1 ? `<button onclick="removeCostRow(${index})" class="remove-cost-btn">×</button>` : ''}
-                            </div>
-                        `;
-                    });
-                    
-                    const totalCost = editingCosts.reduce((sum, cost) => sum + cost.amount, 0);
-                    
-                    row.innerHTML = `
-                        <td>
-                            <input type="text" class="edit-input edit-title" value="${book.title}">
-                        </td>
-                        <td>
-                            <div class="cost-editing-container">
-                                <div class="cost-header">
-                                    <strong id="editingTotal">Total: $${totalCost.toFixed(2)}</strong>
-                                    <button onclick="addCostRow()" class="add-cost-btn">+ Add Cost</button>
-                                </div>
-                                ${costsHtml}
-                            </div>
-                        </td>
-                        <td>
-                            <input type="text" class="edit-input edit-date" value="${savedReleaseDate}" placeholder="2025-03-15, 03/15/2025, etc.">
-                        </td>
-                        <td class="${profitClass}">$${book.cumulativeProfit.toFixed(2)}</td>
-                        <td>${status}</td>
-                        <td class="estimated-timeline">${estimatePayoffQuarters(book)}</td>
-                        <td>
-                            <button onclick="saveBookEdit(${book.id})" class="save-btn">Save</button>
-                            <button onclick="cancelBookEdit()" class="cancel-btn">Cancel</button>
-                        </td>
-                    `;
-                } else {
-                    const costBreakdownHtml = book.costBreakdown && book.costBreakdown.length > 0 ? 
-                        book.costBreakdown.map(cost => `${cost.category}: $${cost.amount.toFixed(2)}`).join('<br>') :
-                        (book.devCost > 0 ? (book.costCategory || 'Unspecified') : 'No costs added');
-                    
-                    row.innerHTML = `
-                        <td><strong>${book.title}</strong></td>
-                        <td>
-                            <strong>$${book.devCost.toFixed(2)}</strong>
-                            <div class="cost-breakdown">${costBreakdownHtml}</div>
-                        </td>
-                        <td>${formatDateForDisplay(book.launchDate)}</td>
-                        <td class="${profitClass}">$${book.cumulativeProfit.toFixed(2)}</td>
-                        <td>${status}</td>
-                        <td class="estimated-timeline">${estimatePayoffQuarters(book)}</td>
-                        <td>
-                            <button onclick="editBook(${book.id})" class="edit-btn">Edit</button>
-                            <button onclick="deleteBook(${book.id})" class="delete-btn">Delete</button>
-                        </td>
-                    `;
-                }
-                activeTableBody.appendChild(row);
-            });
-
-            // Render paid off books table
-            const paidOffTableBody = document.getElementById('paidOffTableBody');
-            paidOffTableBody.innerHTML = '';
-
-            paidOffBooks.forEach(book => {
-                const row = document.createElement('tr');
-                row.setAttribute('data-paid-off-book-id', book.id);
-                
-                if (editingPaidOffBookId === book.id) {
-                    row.classList.add('edit-row');
-                    
-                    let costsHtml = '';
-                    editingPaidOffCosts.forEach((cost, index) => {
-                        costsHtml += `
-                            <div class="cost-row">
-                                <select class="edit-input edit-paid-off-cost-category" onchange="updatePaidOffTotalDisplay()">
-                                    <option value="Cover Design" ${cost.category === 'Cover Design' ? 'selected' : ''}>Cover Design</option>
-                                    <option value="Editing" ${cost.category === 'Editing' ? 'selected' : ''}>Editing</option>
-                                    <option value="Formatting" ${cost.category === 'Formatting' ? 'selected' : ''}>Formatting</option>
-                                    <option value="Marketing" ${cost.category === 'Marketing' ? 'selected' : ''}>Marketing</option>
-                                    <option value="Printing" ${cost.category === 'Printing' ? 'selected' : ''}>Printing</option>
-                                    <option value="ISBN/Copyright" ${cost.category === 'ISBN/Copyright' ? 'selected' : ''}>ISBN/Copyright</option>
-                                    <option value="Illustration" ${cost.category === 'Illustration' ? 'selected' : ''}>Illustration</option>
-                                    <option value="Translation" ${cost.category === 'Translation' ? 'selected' : ''}>Translation</option>
-                                    <option value="Software/Tools" ${cost.category === 'Software/Tools' ? 'selected' : ''}>Software/Tools</option>
-                                    <option value="Other" ${cost.category === 'Other' ? 'selected' : ''}>Other</option>
-                                    <option value="Unspecified" ${cost.category === 'Unspecified' ? 'selected' : ''}>Unspecified</option>
-                                </select>
-                                <input type="number" class="edit-input edit-paid-off-cost-amount" value="${cost.amount}" step="0.01" oninput="updatePaidOffTotalDisplay()">
-                                ${editingPaidOffCosts.length > 1 ? `<button onclick="removePaidOffCostRow(${index})" class="remove-cost-btn">×</button>` : ''}
-                            </div>
-                        `;
-                    });
-                    
-                    const totalCost = editingPaidOffCosts.reduce((sum, cost) => sum + cost.amount, 0);
-                    
-                    row.innerHTML = `
-                        <td>
-                            <input type="text" class="edit-input edit-paid-off-title" value="${book.title}">
-                        </td>
-                        <td>
-                            <div class="cost-editing-container">
-                                <div class="cost-header">
-                                    <strong id="editingPaidOffTotal">Total: $${totalCost.toFixed(2)}</strong>
-                                    <button onclick="addPaidOffCostRow()" class="add-cost-btn">+ Add Cost</button>
-                                </div>
-                                ${costsHtml}
-                            </div>
-                        </td>
-                        <td>
-                            <input type="number" class="edit-input edit-paid-off-months" value="${book.monthsToPayoff}" min="0" readonly style="background: #f8f9fa;">
-                        </td>
-                        <td>
-                            <input type="text" class="edit-input edit-paid-off-launch-date" value="${formatDateForInput(book.launchDate)}" placeholder="2025-03-15, 03/15/2025, etc." onchange="updateMonthsToPayoff(${book.id})">
-                        </td>
-                        <td>
-                            <input type="text" class="edit-input edit-paid-off-payoff-date" value="${formatDateForInput(book.payoffDate)}" placeholder="2025-03-15, 03/15/2025, etc." onchange="updateMonthsToPayoff(${book.id})">
-                        </td>
-                        <td>
-                            <button onclick="savePaidOffBookEdit(${book.id})" class="save-btn">Save</button>
-                            <button onclick="cancelPaidOffBookEdit()" class="cancel-btn">Cancel</button>
-                        </td>
-                    `;
-                } else {
-                    const costBreakdownHtml = book.costBreakdown && book.costBreakdown.length > 0 ? 
-                        book.costBreakdown.map(cost => `${cost.category}: $${cost.amount.toFixed(2)}`).join('<br>') :
-                        (book.costCategory || 'Unspecified');
-                    
-                    row.innerHTML = `
-                        <td><strong>${book.title}</strong></td>
-                        <td>
-                            <strong>$${book.devCost.toFixed(2)}</strong>
-                            <div class="cost-breakdown">${costBreakdownHtml}</div>
-                        </td>
-                        <td>${book.monthsToPayoff} months</td>
-                        <td>${formatDateForDisplay(book.launchDate)}</td>
-                        <td>${formatDateForDisplay(book.payoffDate)}</td>
-                        <td>
-                            <button onclick="editPaidOffBook(${book.id})" class="edit-btn">Edit</button>
-                            <button onclick="deletePaidOffBook(${book.id})" class="delete-btn">Delete</button>
-                        </td>
-                    `;
-                }
-                paidOffTableBody.appendChild(row);
-            });
-
-            // Update book select dropdown
-            const updateBookSelect = document.getElementById('updateBookSelect');
-            updateBookSelect.innerHTML = '<option value="">Select Book to Update</option>';
-            books.forEach(book => {
-                if (book.devCost > 0 && book.cumulativeProfit < book.devCost) {
-                    const option = document.createElement('option');
-                    option.value = book.id;
-                    option.textContent = book.title;
-                    updateBookSelect.appendChild(option);
-                }
-            });
-        }
-
-        // Export/Import functions
-        function exportData() {
-            const dataToExport = {
-                books: books,
-                paidOffBooks: paidOffBooks,
-                exportDate: new Date().toISOString(),
-                userEmail: currentUser?.email,
-                version: "5.1"
+            const rangeData = {
+                startDate: startDate,
+                endDate: endDate,
+                platforms: {},
+                timeInvestment: {
+                    creation: parseFloat(document.getElementById('time-creation')?.value) || 0,
+                    management: parseFloat(document.getElementById('time-management')?.value) || 0,
+                    engagement: parseFloat(document.getElementById('time-engagement')?.value) || 0,
+                    analytics: parseFloat(document.getElementById('time-analytics')?.value) || 0
+                },
+                lastUpdated: new Date().toISOString(),
+                postCounter: postCounter // Save current post counter
             };
 
-            const dataStr = JSON.stringify(dataToExport, null, 2);
+            const platforms = ['instagram', 'facebook', 'threads', 'tiktok', 'pinterest'];
+            platforms.forEach(platform => {
+                rangeData.platforms[platform] = {
+                    posts: collectPostsFromPlatform(platform)
+                };
+            });
+
+            return rangeData;
+        }
+
+        function collectPostsFromPlatform(platform) {
+            const container = document.getElementById(platform + '-posts');
+            if (!container) return [];
+
+            const posts = container.querySelectorAll('.post-entry');
+            const postData = [];
+
+            posts.forEach(post => {
+                const postId = post.dataset.postId;
+                postData.push({
+                    id: postId,
+                    platform: platform, // Store platform with each post
+                    description: post.querySelector('.post-description')?.value || '',
+                    type: post.querySelector('.post-type')?.value || '',
+                    views: parseInt(post.querySelector('.post-views')?.value) || 0,
+                    likes: parseInt(post.querySelector('.post-likes')?.value) || 0,
+                    comments: parseInt(post.querySelector('.post-comments')?.value) || 0,
+                    shares: parseInt(post.querySelector('.post-shares')?.value) || 0,
+                    newFollowers: parseInt(post.querySelector('.post-new-followers')?.value) || 0, // NEW
+                    notes: post.querySelector('.post-notes')?.value || '',
+                    createdAt: new Date().toISOString()
+                });
+            });
+
+            return postData;
+        }
+
+        function populateFormWithData(rangeData) {
+            console.log('Populating form with data:', rangeData);
+            
+            // Clear existing posts first
+            clearAllPlatformPosts();
+            
+            // Restore post counter
+            if (rangeData.postCounter) {
+                postCounter = rangeData.postCounter;
+            }
+            
+            document.getElementById('startDatePicker').value = rangeData.startDate || '';
+            document.getElementById('endDatePicker').value = rangeData.endDate || '';
+            
+            const platforms = ['instagram', 'facebook', 'threads', 'tiktok', 'pinterest'];
+            
+            platforms.forEach(platform => {
+                if (rangeData.platforms?.[platform]?.posts && rangeData.platforms[platform].posts.length > 0) {
+                    const container = document.getElementById(platform + '-posts');
+                    if (container) {
+                        rangeData.platforms[platform].posts.forEach((postData, index) => {
+                            // Add header for each post
+                            const headerDiv = document.createElement('div');
+                            headerDiv.className = 'post-header';
+                            headerDiv.innerHTML = `
+                                <div>Description</div>
+                                <div>Type</div>
+                                <div>Views</div>
+                                <div>Likes</div>
+                                <div>Comments</div>
+                                <div>Shares</div>
+                                <div>New Followers</div>
+                                <div>Engagement</div>
+                                <div>Actions</div>
+                            `;
+                            container.appendChild(headerDiv);
+                            
+                            // Add the post
+                            const postDiv = document.createElement('div');
+                            postDiv.className = 'post-entry';
+                            postDiv.dataset.postId = postData.id || postCounter++;
+                            postDiv.dataset.platform = platform;
+                            postDiv.innerHTML = createPostHTML(postData.id || postCounter, platform, postData, false);
+                            
+                            container.appendChild(postDiv);
+                            
+                            setTimeout(() => {
+                                calculateEngagement(postDiv.querySelector('.post-views'));
+                                updateFollowersDisplay(postDiv.querySelector('.post-new-followers'));
+                            }, 100);
+                        });
+                        
+                        // Add the "Add Another Post" button and summary at the end
+                        const addButton = document.createElement('div');
+                        addButton.className = 'add-post-button';
+                        addButton.innerHTML = `<button onclick="addPost('${platform}')" style="background: #38a169; margin: 20px 0;">+ Add Another Post</button>`;
+                        container.appendChild(addButton);
+                        
+                        const summary = document.createElement('div');
+                        summary.className = 'platform-summary-section';
+                        summary.innerHTML = `
+                            <div style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 8px;">
+                                <h4>${getPlatformIcon(platform)} Summary</h4>
+                                <div id="${platform}-summary">Add posts to see summary</div>
+                            </div>
+                        `;
+                        container.appendChild(summary);
+                        
+                        updatePlatformSummary(platform);
+                    }
+                }
+            });
+
+            if (rangeData.timeInvestment) {
+                const timeData = rangeData.timeInvestment;
+                if (document.getElementById('time-creation')) {
+                    document.getElementById('time-creation').value = timeData.creation || 0;
+                }
+                if (document.getElementById('time-management')) {
+                    document.getElementById('time-management').value = timeData.management || 0;
+                }
+                if (document.getElementById('time-engagement')) {
+                    document.getElementById('time-engagement').value = timeData.engagement || 0;
+                }
+                if (document.getElementById('time-analytics')) {
+                    document.getElementById('time-analytics').value = timeData.analytics || 0;
+                }
+                updateTimeAnalysis();
+            }
+        }
+
+        // Date range functions - ENHANCED with better feedback
+        function updateDateRange() {
+            const startDate = document.getElementById('startDatePicker').value;
+            const endDate = document.getElementById('endDatePicker').value;
+            
+            if (!startDate) return;
+            
+            // Auto-calculate end date if not provided (7 days from start)
+            if (!endDate) {
+                const start = new Date(startDate);
+                const end = new Date(start);
+                end.setDate(start.getDate() + 6);
+                document.getElementById('endDatePicker').value = end.toISOString().split('T')[0];
+            }
+            
+            // Load data for new date range
+            if (currentUser && !initializationError) {
+                loadUserData();
+            }
+        }
+
+        function setThisWeek() {
+            const today = new Date();
+            const monday = new Date(today);
+            monday.setDate(today.getDate() - today.getDay() + 1); // Get Monday
+            
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6); // Get Sunday
+            
+            document.getElementById('startDatePicker').value = monday.toISOString().split('T')[0];
+            document.getElementById('endDatePicker').value = sunday.toISOString().split('T')[0];
+            
+            updateDateRange();
+        }
+
+        function setLastWeek() {
+            const today = new Date();
+            const lastMonday = new Date(today);
+            lastMonday.setDate(today.getDate() - today.getDay() + 1 - 7); // Get last Monday
+            
+            const lastSunday = new Date(lastMonday);
+            lastSunday.setDate(lastMonday.getDate() + 6); // Get last Sunday
+            
+            document.getElementById('startDatePicker').value = lastMonday.toISOString().split('T')[0];
+            document.getElementById('endDatePicker').value = lastSunday.toISOString().split('T')[0];
+            
+            updateDateRange();
+        }
+
+        function switchEntryMethod(method) {
+            currentEntryMethod = method;
+            
+            // Update active method styling
+            document.querySelectorAll('.entry-method').forEach(el => el.classList.remove('active'));
+            document.getElementById(method + 'Method').classList.add('active');
+            
+            // Show/hide sections
+            document.getElementById('dashboardSection').classList.toggle('hidden', method !== 'dashboard');
+            document.getElementById('bulkSection').classList.toggle('hidden', method !== 'bulk');
+            document.getElementById('aiSection').classList.toggle('hidden', method !== 'ai');
+        }
+
+        function switchCSVMethod(method) {
+            csvInputMethod = method;
+            
+            // Update active method styling
+            document.querySelectorAll('.csv-method').forEach(el => el.classList.remove('active'));
+            document.getElementById(method + 'Method').classList.add('active');
+            
+            // Show/hide sections
+            document.getElementById('pasteCSVSection').classList.toggle('hidden', method !== 'paste');
+            document.getElementById('uploadCSVSection').classList.toggle('hidden', method !== 'upload');
+        }
+
+        function initializePlatforms() {
+            const platforms = [
+                { id: 'instagram', name: '📸 Instagram', icon: '📸' },
+                { id: 'facebook', name: '📘 Facebook', icon: '📘' },
+                { id: 'threads', name: '🧵 Threads', icon: '🧵' },
+                { id: 'tiktok', name: '🎵 TikTok', icon: '🎵' },
+                { id: 'pinterest', name: '📌 Pinterest', icon: '📌' }
+            ];
+
+            const container = document.getElementById('platformSections');
+            container.innerHTML = '';
+
+            platforms.forEach(platform => {
+                const platformDiv = document.createElement('div');
+                platformDiv.className = 'platform-section';
+                platformDiv.innerHTML = `
+                    <div class="platform-header" onclick="togglePlatform('${platform.id}')">
+                        <span>${platform.name}</span>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div id="${platform.id}-content" class="platform-content">
+                        <div style="margin-bottom: 20px;">
+                            <button onclick="addPost('${platform.id}')" style="background: #38a169;">+ Add Post</button>
+                        </div>
+                        <div id="${platform.id}-posts"></div>
+                    </div>
+                `;
+                container.appendChild(platformDiv);
+            });
+        }
+
+        function togglePlatform(platform) {
+            const content = document.getElementById(platform + '-content');
+            const header = content.previousElementSibling;
+            
+            content.classList.toggle('hidden');
+            header.classList.toggle('collapsed');
+        }
+
+        // NEW: Function to update followers display with color coding
+        function updateFollowersDisplay(element) {
+            const value = parseInt(element.value) || 0;
+            element.classList.remove('positive', 'zero', 'negative');
+            
+            if (value > 0) {
+                element.classList.add('positive');
+            } else if (value === 0) {
+                element.classList.add('zero');
+            } else {
+                element.classList.add('negative');
+            }
+        }
+
+        // FIXED: Post management functions with vertically stacked action buttons - NOW WITH NEW FOLLOWERS
+        function addPost(platform) {
+            postCounter++;
+            const container = document.getElementById(platform + '-posts');
+            
+            // Create header for this post (appears above each post)
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'post-header';
+            headerDiv.innerHTML = `
+                <div>Description</div>
+                <div>Type</div>
+                <div>Views</div>
+                <div>Likes</div>
+                <div>Comments</div>
+                <div>Shares</div>
+                <div>New Followers</div>
+                <div>Engagement</div>
+                <div>Actions</div>
+            `;
+            
+            const postDiv = document.createElement('div');
+            postDiv.className = 'post-entry editing';
+            postDiv.dataset.postId = postCounter;
+            postDiv.dataset.platform = platform; // Store platform reference
+            
+            // Platform-specific defaults
+            const defaultData = {
+                description: '',
+                type: platform === 'tiktok' ? 'Video' : 'Post', // TikTok defaults to Video
+                views: '',
+                likes: '',
+                comments: '',
+                shares: '',
+                newFollowers: '', // NEW
+                notes: ''
+            };
+            
+            postDiv.innerHTML = createPostHTML(postCounter, platform, defaultData, true);
+            
+            // Find the add button and summary, or add them if they don't exist
+            let addButton = container.querySelector('.add-post-button');
+            let summary = container.querySelector('.platform-summary-section');
+            
+            if (!addButton) {
+                addButton = document.createElement('div');
+                addButton.className = 'add-post-button';
+                addButton.innerHTML = `<button onclick="addPost('${platform}')" style="background: #38a169; margin: 20px 0;">+ Add Another Post</button>`;
+            }
+            
+            if (!summary) {
+                summary = document.createElement('div');
+                summary.className = 'platform-summary-section';
+                summary.innerHTML = `
+                    <div style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 8px;">
+                        <h4>${getPlatformIcon(platform)} Summary</h4>
+                        <div id="${platform}-summary">Add posts to see summary</div>
+                    </div>
+                `;
+            }
+            
+            // Remove existing add button and summary
+            if (container.querySelector('.add-post-button')) {
+                container.querySelector('.add-post-button').remove();
+            }
+            if (container.querySelector('.platform-summary-section')) {
+                container.querySelector('.platform-summary-section').remove();
+            }
+            
+            // Add header, then post
+            container.appendChild(headerDiv);
+            container.appendChild(postDiv);
+            
+            // Add the button after the post, then summary at the end
+            container.appendChild(addButton);
+            container.appendChild(summary);
+            
+            updatePlatformSummary(platform);
+        }
+        
+        function getPlatformIcon(platform) {
+            const icons = {
+                'instagram': '📸 Instagram',
+                'facebook': '📘 Facebook', 
+                'threads': '🧵 Threads',
+                'tiktok': '🎵 TikTok',
+                'pinterest': '📌 Pinterest'
+            };
+            return icons[platform] || platform;
+        }
+
+        function createPostHTML(postId, platform, data, isEditing) {
+            const saveButton = isEditing ? 
+                `<button class="save-btn" onclick="event.stopPropagation(); savePost('${platform}', ${postId})">Save</button>
+                 <button class="cancel-btn" onclick="event.stopPropagation(); cancelEdit('${platform}', ${postId})">Cancel</button>` :
+                `<button class="edit-btn" onclick="event.stopPropagation(); editPost('${platform}', ${postId})">Edit</button>
+                 <button class="remove-btn" onclick="event.stopPropagation(); removePost(this)">Remove</button>`;
+            
+            // Platform-specific defaults: TikTok is always Video, others default to Post
+            const defaultType = data.type || (platform === 'tiktok' ? 'Video' : 'Post');
+            
+            // NEW: Format new followers with styling
+            const newFollowersValue = data.newFollowers || '';
+            let followersClass = 'new-followers';
+            if (newFollowersValue > 0) followersClass += ' positive';
+            else if (newFollowersValue == 0) followersClass += ' zero';
+            else if (newFollowersValue < 0) followersClass += ' negative';
+            
+            return `
+                <div class="post-grid">
+                    <input type="text" placeholder="Post description" class="post-description" value="${data.description || ''}" oninput="this.setAttribute('data-temp-value', this.value)" onchange="calculateEngagement(this); saveData()" ${!isEditing ? 'readonly' : ''}>
+                    <select class="post-type" onchange="this.setAttribute('data-temp-value', this.value); saveData()" ${!isEditing ? 'disabled' : ''}>
+                        <option value="Post" ${defaultType === 'Post' ? 'selected' : ''}>Post</option>
+                        <option value="Reel" ${defaultType === 'Reel' ? 'selected' : ''}>Reel</option>
+                        <option value="Story" ${defaultType === 'Story' ? 'selected' : ''}>Story</option>
+                        <option value="Carousel" ${defaultType === 'Carousel' ? 'selected' : ''}>Carousel</option>
+                        <option value="Video" ${defaultType === 'Video' ? 'selected' : ''}>Video</option>
+                        <option value="Pin" ${defaultType === 'Pin' ? 'selected' : ''}>Pin</option>
+                        <option value="Tweet" ${defaultType === 'Tweet' ? 'selected' : ''}>Tweet</option>
+                        <option value="Other" ${defaultType === 'Other' ? 'selected' : ''}>Other</option>
+                    </select>
+                    <input type="number" placeholder="0" class="post-views" value="${data.views || ''}" oninput="this.setAttribute('data-temp-value', this.value)" onchange="calculateEngagement(this); saveData()" ${!isEditing ? 'readonly' : ''}>
+                    <input type="number" placeholder="0" class="post-likes" value="${data.likes || ''}" oninput="this.setAttribute('data-temp-value', this.value)" onchange="calculateEngagement(this); saveData()" ${!isEditing ? 'readonly' : ''}>
+                    <input type="number" placeholder="0" class="post-comments" value="${data.comments || ''}" oninput="this.setAttribute('data-temp-value', this.value)" onchange="calculateEngagement(this); saveData()" ${!isEditing ? 'readonly' : ''}>
+                    <input type="number" placeholder="0" class="post-shares" value="${data.shares || ''}" oninput="this.setAttribute('data-temp-value', this.value)" onchange="calculateEngagement(this); saveData()" ${!isEditing ? 'readonly' : ''}>
+                    <input type="number" placeholder="0" class="post-new-followers ${followersClass}" value="${newFollowersValue}" oninput="this.setAttribute('data-temp-value', this.value); updateFollowersDisplay(this)" onchange="updateFollowersDisplay(this); saveData()" ${!isEditing ? 'readonly' : ''}>
+                    <div class="engagement-rate" id="rate-${postId}">0%</div>
+                    <div class="post-actions">
+                        ${saveButton}
+                    </div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <label style="font-size: 12px; color: #718096;">Notes:</label>
+                    <input type="text" placeholder="Additional notes about this post" class="post-notes" value="${data.notes || ''}" oninput="this.setAttribute('data-temp-value', this.value)" style="margin-top: 5px;" onchange="saveData()" ${!isEditing ? 'readonly' : ''}>
+                </div>
+            `;
+        }
+
+        function editPost(platform, postId) {
+            console.log('Editing post:', postId, 'on platform:', platform);
+            
+            // Cancel any other edit first
+            if (editingPostId !== null && editingPostId !== postId) {
+                cancelEdit();
+            }
+            
+            editingPostId = postId;
+            const postDiv = document.querySelector(`[data-post-id="${postId}"]`);
+            
+            if (!postDiv) {
+                console.error('Post not found:', postId);
+                return;
+            }
+            
+            postDiv.classList.add('editing');
+            
+            // Collect current data more carefully, using temp values as backup
+            const descriptionEl = postDiv.querySelector('.post-description');
+            const typeEl = postDiv.querySelector('.post-type');
+            const viewsEl = postDiv.querySelector('.post-views');
+            const likesEl = postDiv.querySelector('.post-likes');
+            const commentsEl = postDiv.querySelector('.post-comments');
+            const sharesEl = postDiv.querySelector('.post-shares');
+            const newFollowersEl = postDiv.querySelector('.post-new-followers'); // NEW
+            const notesEl = postDiv.querySelector('.post-notes');
+            
+            const currentData = {
+                description: descriptionEl?.getAttribute('data-temp-value') || descriptionEl?.value || '',
+                type: typeEl?.getAttribute('data-temp-value') || typeEl?.value || 'Post',
+                views: viewsEl?.getAttribute('data-temp-value') || viewsEl?.value || '',
+                likes: likesEl?.getAttribute('data-temp-value') || likesEl?.value || '',
+                comments: commentsEl?.getAttribute('data-temp-value') || commentsEl?.value || '',
+                shares: sharesEl?.getAttribute('data-temp-value') || sharesEl?.value || '',
+                newFollowers: newFollowersEl?.getAttribute('data-temp-value') || newFollowersEl?.value || '', // NEW
+                notes: notesEl?.getAttribute('data-temp-value') || notesEl?.value || ''
+            };
+            
+            console.log('Preserving data for edit:', currentData);
+            
+            // Replace HTML with editing version, preserving all data
+            postDiv.innerHTML = createPostHTML(postId, platform, currentData, true);
+            
+            // Set the temp attributes to preserve the data
+            setTimeout(() => {
+                const newDescriptionEl = postDiv.querySelector('.post-description');
+                const newTypeEl = postDiv.querySelector('.post-type');
+                const newViewsEl = postDiv.querySelector('.post-views');
+                const newLikesEl = postDiv.querySelector('.post-likes');
+                const newCommentsEl = postDiv.querySelector('.post-comments');
+                const newSharesEl = postDiv.querySelector('.post-shares');
+                const newNewFollowersEl = postDiv.querySelector('.post-new-followers'); // NEW
+                const newNotesEl = postDiv.querySelector('.post-notes');
+                
+                if (newDescriptionEl) newDescriptionEl.setAttribute('data-temp-value', currentData.description);
+                if (newTypeEl) newTypeEl.setAttribute('data-temp-value', currentData.type);
+                if (newViewsEl) newViewsEl.setAttribute('data-temp-value', currentData.views);
+                if (newLikesEl) newLikesEl.setAttribute('data-temp-value', currentData.likes);
+                if (newCommentsEl) newCommentsEl.setAttribute('data-temp-value', currentData.comments);
+                if (newSharesEl) newSharesEl.setAttribute('data-temp-value', currentData.shares);
+                if (newNewFollowersEl) newNewFollowersEl.setAttribute('data-temp-value', currentData.newFollowers); // NEW
+                if (newNotesEl) newNotesEl.setAttribute('data-temp-value', currentData.notes);
+                
+                // Recalculate engagement and update followers display
+                if (newViewsEl) {
+                    calculateEngagement(newViewsEl);
+                }
+                if (newNewFollowersEl) {
+                    updateFollowersDisplay(newNewFollowersEl);
+                }
+            }, 100);
+        }
+
+        function savePost(platform, postId) {
+            console.log('Saving post:', postId, 'on platform:', platform);
+            
+            const postDiv = document.querySelector(`[data-post-id="${postId}"]`);
+            if (!postDiv) {
+                console.error('Post not found:', postId);
+                return;
+            }
+            
+            editingPostId = null;
+            postDiv.classList.remove('editing');
+            
+            // Collect data more carefully, using temp values as backup
+            const descriptionEl = postDiv.querySelector('.post-description');
+            const typeEl = postDiv.querySelector('.post-type');
+            const viewsEl = postDiv.querySelector('.post-views');
+            const likesEl = postDiv.querySelector('.post-likes');
+            const commentsEl = postDiv.querySelector('.post-comments');
+            const sharesEl = postDiv.querySelector('.post-shares');
+            const newFollowersEl = postDiv.querySelector('.post-new-followers'); // NEW
+            const notesEl = postDiv.querySelector('.post-notes');
+            
+            const currentData = {
+                description: descriptionEl?.getAttribute('data-temp-value') || descriptionEl?.value || '',
+                type: typeEl?.getAttribute('data-temp-value') || typeEl?.value || 'Post',
+                views: viewsEl?.getAttribute('data-temp-value') || viewsEl?.value || '',
+                likes: likesEl?.getAttribute('data-temp-value') || likesEl?.value || '',
+                comments: commentsEl?.getAttribute('data-temp-value') || commentsEl?.value || '',
+                shares: sharesEl?.getAttribute('data-temp-value') || sharesEl?.value || '',
+                newFollowers: newFollowersEl?.getAttribute('data-temp-value') || newFollowersEl?.value || '', // NEW
+                notes: notesEl?.getAttribute('data-temp-value') || notesEl?.value || ''
+            };
+            
+            console.log('Saving data:', currentData);
+            
+            // Replace HTML with non-editing version, preserving all data
+            postDiv.innerHTML = createPostHTML(postId, platform, currentData, false);
+            
+            // Set temp attributes on the new elements too
+            setTimeout(() => {
+                const newDescriptionEl = postDiv.querySelector('.post-description');
+                const newTypeEl = postDiv.querySelector('.post-type');
+                const newViewsEl = postDiv.querySelector('.post-views');
+                const newLikesEl = postDiv.querySelector('.post-likes');
+                const newCommentsEl = postDiv.querySelector('.post-comments');
+                const newSharesEl = postDiv.querySelector('.post-shares');
+                const newNewFollowersEl = postDiv.querySelector('.post-new-followers'); // NEW
+                const newNotesEl = postDiv.querySelector('.post-notes');
+                
+                if (newDescriptionEl) newDescriptionEl.setAttribute('data-temp-value', currentData.description);
+                if (newTypeEl) newTypeEl.setAttribute('data-temp-value', currentData.type);
+                if (newViewsEl) newViewsEl.setAttribute('data-temp-value', currentData.views);
+                if (newLikesEl) newLikesEl.setAttribute('data-temp-value', currentData.likes);
+                if (newCommentsEl) newCommentsEl.setAttribute('data-temp-value', currentData.comments);
+                if (newSharesEl) newSharesEl.setAttribute('data-temp-value', currentData.shares);
+                if (newNewFollowersEl) newNewFollowersEl.setAttribute('data-temp-value', currentData.newFollowers); // NEW
+                if (newNotesEl) newNotesEl.setAttribute('data-temp-value', currentData.notes);
+                
+                // Recalculate engagement, update followers display, and update summaries
+                if (newViewsEl) {
+                    calculateEngagement(newViewsEl);
+                }
+                if (newNewFollowersEl) {
+                    updateFollowersDisplay(newNewFollowersEl);
+                }
+                updatePlatformSummary(platform);
+            }, 100);
+            
+            // Save data
+            if (currentUser && !initializationError) {
+                saveData().then(() => {
+                    console.log('Post saved successfully');
+                }).catch(error => {
+                    console.error('Save error:', error);
+                });
+            }
+        }
+
+        function cancelEdit(platform, postId) {
+            console.log('Cancelling edit for post:', postId);
+            
+            const postDiv = document.querySelector(`[data-post-id="${postId}"]`);
+            if (!postDiv) return;
+            
+            // If this is a new post (was created in editing mode), remove it entirely
+            if (editingPostId === postId && postDiv.classList.contains('editing')) {
+                removePost(postDiv.querySelector('.cancel-btn'));
+                return;
+            }
+            
+            editingPostId = null;
+            
+            // Trigger a data reload to restore original state
+            if (currentUser && !initializationError) {
+                loadUserData();
+            }
+        }
+
+        function removePost(button) {
+            const postEntry = button.closest('.post-entry');
+            const postId = postEntry.dataset.postId;
+            const platform = postEntry.dataset.platform;
+            
+            console.log('Removing post:', postId, 'from platform:', platform);
+            
+            if (editingPostId && postEntry.dataset.postId == editingPostId) {
+                editingPostId = null;
+            }
+            
+            // Find and remove the associated header (the one directly before this post)
+            const postHeader = postEntry.previousElementSibling;
+            if (postHeader && postHeader.classList.contains('post-header')) {
+                postHeader.remove();
+            }
+            
+            // Remove the post
+            postEntry.remove();
+            
+            const container = document.getElementById(platform + '-posts');
+            const remainingPosts = container.querySelectorAll('.post-entry');
+            
+            // If no posts left, remove the add button and summary too
+            if (remainingPosts.length === 0) {
+                const addButton = container.querySelector('.add-post-button');
+                const summary = container.querySelector('.platform-summary-section');
+                if (addButton) addButton.remove();
+                if (summary) summary.remove();
+            }
+            
+            updatePlatformSummary(platform);
+            
+            // Save data after removing post
+            if (currentUser && !initializationError) {
+                saveData().then(() => {
+                    console.log('Post removal saved successfully');
+                }).catch(error => {
+                    console.error('Save error:', error);
+                });
+            }
+        }
+
+        function calculateEngagement(element) {
+            const postEntry = element.closest('.post-entry');
+            const views = parseFloat(postEntry.querySelector('.post-views').value) || 0;
+            const likes = parseFloat(postEntry.querySelector('.post-likes').value) || 0;
+            const comments = parseFloat(postEntry.querySelector('.post-comments').value) || 0;
+            const shares = parseFloat(postEntry.querySelector('.post-shares').value) || 0;
+            
+            if (views > 0) {
+                const totalEngagement = likes + comments + shares;
+                const engagementRate = (totalEngagement / views) * 100;
+                
+                const rateElement = postEntry.querySelector('.engagement-rate');
+                rateElement.textContent = engagementRate.toFixed(2) + '%';
+                
+                rateElement.className = 'engagement-rate ';
+                if (engagementRate >= 6) {
+                    rateElement.className += 'rate-excellent';
+                } else if (engagementRate >= 4) {
+                    rateElement.className += 'rate-good';
+                } else if (engagementRate >= 2) {
+                    rateElement.className += 'rate-average';
+                } else {
+                    rateElement.className += 'rate-poor';
+                }
+            }
+            
+            const platform = postEntry.dataset.platform;
+            updatePlatformSummary(platform);
+        }
+
+        // ENHANCED: Platform summary function with new followers tracking
+        function updatePlatformSummary(platform) {
+            const container = document.getElementById(platform + '-posts');
+            const posts = container.querySelectorAll('.post-entry');
+            
+            let totalPosts = posts.length;
+            let totalViews = 0;
+            let totalNewFollowers = 0; // NEW
+            let engagementRates = [];
+            let bestPost = { rate: 0, description: '' };
+            let worstPost = { rate: Infinity, description: '' };
+            let bestFollowerPost = { followers: 0, description: '' }; // NEW
+            
+            posts.forEach(post => {
+                const views = parseFloat(post.querySelector('.post-views').value) || 0;
+                const likes = parseFloat(post.querySelector('.post-likes').value) || 0;
+                const comments = parseFloat(post.querySelector('.post-comments').value) || 0;
+                const shares = parseFloat(post.querySelector('.post-shares').value) || 0;
+                const newFollowers = parseInt(post.querySelector('.post-new-followers').value) || 0; // NEW
+                const description = post.querySelector('.post-description').value || 'Untitled post';
+                
+                totalViews += views;
+                totalNewFollowers += newFollowers; // NEW
+                
+                // Calculate engagement rate for all posts (0% if no views)
+                const rate = views > 0 ? ((likes + comments + shares) / views) * 100 : 0;
+                engagementRates.push(rate);
+                
+                // Track best post
+                if (rate > bestPost.rate) {
+                    bestPost = { rate, description };
+                }
+                
+                // Track worst post (always, as long as we have posts)
+                if (rate < worstPost.rate) {
+                    worstPost = { rate, description };
+                }
+                
+                // NEW: Track best follower-gaining post
+                if (newFollowers > bestFollowerPost.followers) {
+                    bestFollowerPost = { followers: newFollowers, description };
+                }
+            });
+            
+            const avgEngagement = engagementRates.length > 0 
+                ? engagementRates.reduce((a, b) => a + b, 0) / engagementRates.length 
+                : 0;
+            
+            let summaryHTML = `
+                <strong>Posts:</strong> ${totalPosts}<br>
+                <strong>Total Views:</strong> ${totalViews.toLocaleString()}<br>
+                <strong>Total New Followers:</strong> <span class="new-followers ${totalNewFollowers > 0 ? 'positive' : totalNewFollowers < 0 ? 'negative' : 'zero'}">${totalNewFollowers > 0 ? '+' : ''}${totalNewFollowers}</span><br>
+                <strong>Average Engagement Rate:</strong> ${avgEngagement.toFixed(2)}%<br>
+            `;
+            
+            if (bestPost.rate > 0) {
+                summaryHTML += `<strong>Best Post:</strong> ${bestPost.description} (${bestPost.rate.toFixed(2)}%)<br>`;
+            }
+            
+            // Show worst post if we have multiple posts and the worst is different from the best
+            if (totalPosts > 1 && worstPost.rate !== bestPost.rate && worstPost.rate < Infinity) {
+                summaryHTML += `<strong>Worst Post:</strong> ${worstPost.description} (${worstPost.rate.toFixed(2)}%)<br>`;
+            }
+            
+            // NEW: Show best follower-gaining post
+            if (bestFollowerPost.followers > 0) {
+                summaryHTML += `<strong>Best for Followers:</strong> ${bestFollowerPost.description} (+${bestFollowerPost.followers})<br>`;
+            }
+            
+            const summaryElement = document.getElementById(platform + '-summary');
+            if (summaryElement) {
+                summaryElement.innerHTML = summaryHTML;
+            }
+            
+            updateOverallSummary();
+        }
+
+        // ENHANCED: Overall summary with followers tracking
+        function updateOverallSummary() {
+            const summaryGrid = document.getElementById('summaryGrid');
+            
+            let totalPosts = 0;
+            let totalViews = 0;
+            let totalNewFollowers = 0; // NEW
+            let allEngagementRates = [];
+            const platforms = ['instagram', 'facebook', 'threads', 'tiktok', 'pinterest'];
+            
+            platforms.forEach(platform => {
+                const container = document.getElementById(platform + '-posts');
+                if (container) {
+                    const posts = container.querySelectorAll('.post-entry');
+                    totalPosts += posts.length;
+                    
+                    posts.forEach(post => {
+                        const views = parseFloat(post.querySelector('.post-views').value) || 0;
+                        const likes = parseFloat(post.querySelector('.post-likes').value) || 0;
+                        const comments = parseFloat(post.querySelector('.post-comments').value) || 0;
+                        const shares = parseFloat(post.querySelector('.post-shares').value) || 0;
+                        const newFollowers = parseInt(post.querySelector('.post-new-followers').value) || 0; // NEW
+                        
+                        totalViews += views;
+                        totalNewFollowers += newFollowers; // NEW
+                        
+                        if (views > 0) {
+                            const rate = ((likes + comments + shares) / views) * 100;
+                            allEngagementRates.push(rate);
+                        }
+                    });
+                }
+            });
+            
+            const avgEngagement = allEngagementRates.length > 0 
+                ? allEngagementRates.reduce((a, b) => a + b, 0) / allEngagementRates.length 
+                : 0;
+            
+            const bestRate = allEngagementRates.length > 0 ? Math.max(...allEngagementRates) : 0;
+            
+            summaryGrid.innerHTML = `
+                <div class="summary-card">
+                    <div class="summary-number">${totalPosts}</div>
+                    <div class="summary-label">Total Posts</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-number">${totalViews.toLocaleString()}</div>
+                    <div class="summary-label">Total Views</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-number ${totalNewFollowers > 0 ? 'positive' : totalNewFollowers < 0 ? 'negative' : ''}" style="color: ${totalNewFollowers > 0 ? '#38a169' : totalNewFollowers < 0 ? '#e53e3e' : 'var(--account-color)'}">${totalNewFollowers > 0 ? '+' : ''}${totalNewFollowers}</div>
+                    <div class="summary-label">New Followers</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-number">${avgEngagement.toFixed(1)}%</div>
+                    <div class="summary-label">Avg Engagement</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-number">${bestRate.toFixed(1)}%</div>
+                    <div class="summary-label">Best Post Rate</div>
+                </div>
+            `;
+        }
+
+        function updateTimeAnalysis() {
+            const creation = parseFloat(document.getElementById('time-creation').value) || 0;
+            const management = parseFloat(document.getElementById('time-management').value) || 0;
+            const engagement = parseFloat(document.getElementById('time-engagement').value) || 0;
+            const analytics = parseFloat(document.getElementById('time-analytics').value) || 0;
+            
+            const total = creation + management + engagement + analytics;
+            
+            let analysis = `<strong>Total Time Investment:</strong> ${total} hours<br><br>`;
+            
+            if (total > 0) {
+                analysis += `<strong>Time Breakdown:</strong><br>`;
+                analysis += `• Content Creation: ${creation}h (${((creation/total)*100).toFixed(1)}%)<br>`;
+                analysis += `• Platform Management: ${management}h (${((management/total)*100).toFixed(1)}%)<br>`;
+                analysis += `• Engagement: ${engagement}h (${((engagement/total)*100).toFixed(1)}%)<br>`;
+                analysis += `• Analytics: ${analytics}h (${((analytics/total)*100).toFixed(1)}%)<br><br>`;
+                
+                if (creation > management + engagement + analytics) {
+                    analysis += '<span style="color: #38a169;">✓ Good balance - spending most time on content creation</span>';
+                } else if (management > creation) {
+                    analysis += '<span style="color: #d69e2e;">⚠ Consider reducing management time vs. content creation</span>';
+                }
+            }
+            
+            document.getElementById('timeAnalysis').innerHTML = analysis;
+        }
+
+        function generateReport() {
+            const rangeData = collectCurrentRangeData();
+            const reportText = generateReportText(rangeData);
+            const blob = new Blob([reportText], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `social-media-report-${rangeData.startDate}.txt`;
+            link.click();
+            
+            alert('Report generated and downloaded!');
+        }
+
+        // ENHANCED: Report generation with followers tracking
+        function generateReportText(rangeData) {
+            const platforms = ['instagram', 'facebook', 'threads', 'tiktok', 'pinterest'];
+            let report = `Social Media Analytics Report\n`;
+            report += `Date Range: ${rangeData.startDate} - ${rangeData.endDate}\n\n`;
+            
+            platforms.forEach(platform => {
+                const platformData = rangeData.platforms[platform];
+                if (platformData && platformData.posts && platformData.posts.length > 0) {
+                    report += `${platform.charAt(0).toUpperCase() + platform.slice(1)}:\n`;
+                    report += `Posts: ${platformData.posts.length}\n`;
+                    
+                    let totalViews = 0;
+                    let totalEngagements = 0;
+                    let totalNewFollowers = 0; // NEW
+                    
+                    platformData.posts.forEach((post, index) => {
+                        const views = post.views || 0;
+                        const engagements = (post.likes || 0) + (post.comments || 0) + (post.shares || 0);
+                        const newFollowers = post.newFollowers || 0; // NEW
+                        
+                        totalViews += views;
+                        totalEngagements += engagements;
+                        totalNewFollowers += newFollowers; // NEW
+                        
+                        if (views > 0) {
+                            const rate = (engagements / views) * 100;
+                            report += `- ${post.description || `Post ${index + 1}`}: ${views} views, ${rate.toFixed(2)}% engagement`;
+                            if (newFollowers !== 0) {
+                                report += `, ${newFollowers > 0 ? '+' : ''}${newFollowers} followers`;
+                            }
+                            report += `\n`;
+                        }
+                    });
+                    
+                    if (totalViews > 0) {
+                        const avgRate = (totalEngagements / totalViews) * 100;
+                        report += `Average engagement: ${avgRate.toFixed(2)}%\n`;
+                    }
+                    
+                    // NEW: Add follower summary
+                    if (totalNewFollowers !== 0) {
+                        report += `Total new followers: ${totalNewFollowers > 0 ? '+' : ''}${totalNewFollowers}\n`;
+                    }
+                    
+                    report += `\n`;
+                }
+            });
+            
+            return report;
+        }
+
+        function exportData() {
+            const rangeData = collectCurrentRangeData();
+            const dataStr = JSON.stringify(rangeData, null, 2);
             const dataBlob = new Blob([dataStr], {type: 'application/json'});
             
             const link = document.createElement('a');
             link.href = URL.createObjectURL(dataBlob);
-            link.download = `book-tracker-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.download = `social-media-data-${rangeData.startDate}.json`;
             link.click();
         }
 
-        async function importData(event) {
-            if (!currentUser) {
-                alert('Please sign in first');
+        function processBulkData() {
+            const csvData = document.getElementById('csvInput').value.trim();
+            if (!csvData) {
+                alert('Please enter CSV data first');
                 return;
             }
-
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    
-                    if (importedData.books && importedData.paidOffBooks) {
-                        if (confirm('This will replace all current data. Are you sure?')) {
-                            // Save to Firebase
-                            for (const book of importedData.books) {
-                                await saveBookToFirebase(book, 'activeBooks');
-                            }
-                            for (const book of importedData.paidOffBooks) {
-                                await saveBookToFirebase(book, 'paidOffBooks');
-                            }
-                            
-                            // Update local data
-                            books = importedData.books;
-                            paidOffBooks = importedData.paidOffBooks;
-                            renderTables();
-                            alert('Data imported successfully!');
-                        }
-                    } else {
-                        alert('Invalid file format. Please select a valid backup file.');
-                    }
-                } catch (error) {
-                    alert('Error reading file. Please make sure it\'s a valid backup file.');
-                }
-            };
-            reader.readAsText(file);
             
-            event.target.value = '';
+            processCSVString(csvData, 'paste');
         }
 
-        async function clearAllData() {
-            if (!currentUser) return;
+        function processCSVFile() {
+            const fileInput = document.getElementById('csvFileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a CSV file first');
+                return;
+            }
+            
+            if (!file.name.toLowerCase().endsWith('.csv')) {
+                alert('Please select a valid CSV file');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const csvData = e.target.result;
+                processCSVString(csvData, 'upload');
+            };
+            
+            reader.onerror = function() {
+                alert('Error reading file. Please try again.');
+            };
+            
+            reader.readAsText(file);
+        }
 
-            if (confirm('This will delete ALL data permanently. Are you sure?\n\nConsider exporting a backup first!')) {
-                if (confirm('Really sure? This cannot be undone!')) {
-                    try {
-                        // Delete from Firebase
-                        for (const book of books) {
-                            await deleteBookFromFirebase(book.id, 'activeBooks');
-                        }
-                        for (const book of paidOffBooks) {
-                            await deleteBookFromFirebase(book.id, 'paidOffBooks');
-                        }
+        // ENHANCED: CSV processing with new followers support
+        function processCSVString(csvData, source) {
+            const lines = csvData.split('\n');
+            let headerProcessed = false;
+            let addedCount = 0;
+            
+            // Simple CSV parsing
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                // Skip header row
+                if (!headerProcessed) {
+                    headerProcessed = true;
+                    // Check if this looks like a header
+                    if (line.toLowerCase().includes('platform') || line.toLowerCase().includes('post')) {
+                        continue;
+                    }
+                }
+                
+                const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+                if (values.length < 7) continue; // Now requires at least 7 columns (including new followers)
+                
+                const platform = values[0].toLowerCase().trim();
+                const postType = values[1].trim();
+                const views = parseInt(values[2]) || 0;
+                const likes = parseInt(values[3]) || 0;
+                const comments = parseInt(values[4]) || 0;
+                const shares = parseInt(values[5]) || 0;
+                const newFollowers = parseInt(values[6]) || 0; // NEW
+                const description = values[7] || postType;
+                
+                // Add to appropriate platform
+                if (['instagram', 'facebook', 'threads', 'tiktok', 'pinterest'].includes(platform)) {
+                    addPost(platform);
+                    const container = document.getElementById(platform + '-posts');
+                    const lastPost = container.lastElementChild;
+                    
+                    if (lastPost && lastPost.classList.contains('post-entry')) {
+                        lastPost.querySelector('.post-description').value = description;
+                        lastPost.querySelector('.post-type').value = postType;
+                        lastPost.querySelector('.post-views').value = views;
+                        lastPost.querySelector('.post-likes').value = likes;
+                        lastPost.querySelector('.post-comments').value = comments;
+                        lastPost.querySelector('.post-shares').value = shares;
+                        lastPost.querySelector('.post-new-followers').value = newFollowers; // NEW
                         
-                        books = [];
-                        paidOffBooks = [];
-                        renderTables();
-                        alert('All data cleared.');
-                    } catch (error) {
-                        alert('Failed to clear all data. Please try again.');
+                        calculateEngagement(lastPost.querySelector('.post-views'));
+                        updateFollowersDisplay(lastPost.querySelector('.post-new-followers')); // NEW
+                        
+                        // Save the post after adding bulk data
+                        savePost(platform, lastPost.dataset.postId);
+                        addedCount++;
                     }
                 }
             }
+            
+            if (addedCount > 0) {
+                if (currentUser && !initializationError) {
+                    saveData().then(() => {
+                        console.log('Bulk import data saved successfully');
+                        alert(`✅ Successfully imported ${addedCount} posts from ${source === 'upload' ? 'file' : 'pasted data'}!`);
+                    }).catch((error) => {
+                        console.error('Save error:', error);
+                        alert(`✅ Successfully imported ${addedCount} posts! (Note: Save to cloud failed - data exists locally)`);
+                    });
+                } else {
+                    alert(`✅ Successfully imported ${addedCount} posts from ${source === 'upload' ? 'file' : 'pasted data'}!`);
+                }
+                
+                // Clear the input
+                if (source === 'paste') {
+                    document.getElementById('csvInput').value = '';
+                } else {
+                    document.getElementById('csvFileInput').value = '';
+                }
+            } else {
+                alert('No valid data found in CSV. Please check the format.');
+            }
         }
+
+        // ENHANCED: AI Screenshot Analysis with followers support
+        async function callOpenAIVision(base64Image) {
+            if (!userApiKey) {
+                throw new Error('No API key provided');
+            }
+            
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${userApiKey}`
+                },
+                body: JSON.stringify({
+                    model: "gpt-4o",
+                    messages: [
+                        {
+                            role: "user",
+                            content: [
+                                {
+                                    type: "text",
+                                    text: `Please analyze this social media analytics screenshot and extract the following data. Look for metrics like views, likes, comments, shares, followers gained, engagement rate, etc. 
+
+Return ONLY a JSON object in this exact format (no other text):
+{
+    "success": true,
+    "data": {
+        "platform": "instagram|facebook|tiktok|threads|pinterest",
+        "postType": "post|reel|story|video|pin",
+        "views": 1234,
+        "likes": 89,
+        "comments": 12,
+        "shares": 5,
+        "newFollowers": 3,
+        "engagementRate": "8.48%",
+        "description": "brief description of what this post was about if visible"
+    }
+}
+
+If you cannot extract meaningful data, return:
+{
+    "success": false,
+    "error": "reason why data could not be extracted"
+}
+
+Look carefully for any numbers related to engagement metrics and follower gains. Sometimes they may be labeled differently (e.g., "reactions" instead of "likes", "reposts" instead of "shares", "followers gained" or "new followers", etc.).`
+                                },
+                                {
+                                    type: "image_url",
+                                    image_url: {
+                                        url: `data:image/jpeg;base64,${base64Image}`
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    max_tokens: 500
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.text();
+                throw new Error(`OpenAI API error: ${response.status} - ${errorData}`);
+            }
+            
+            const result = await response.json();
+            const content = result.choices[0].message.content;
+            
+            try {
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    return JSON.parse(jsonMatch[0]);
+                } else {
+                    throw new Error('No valid JSON found in response');
+                }
+            } catch (parseError) {
+                console.error('JSON parse error:', parseError);
+                return {
+                    success: false,
+                    error: 'Could not parse AI response'
+                };
+            }
+        }
+        
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => {
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = error => reject(error);
+            });
+        }
+        
+        // ENHANCED: Add extracted data with followers support
+        function addExtractedDataToTracker(index) {
+            const resultDiv = document.querySelector(`#actions-${index}`).closest('.analysis-result');
+            const extractedData = JSON.parse(resultDiv.dataset.extractedData);
+            const platform = document.getElementById(`platform-${index}`).value;
+            
+            // Switch to dashboard view if not already there
+            if (currentEntryMethod !== 'dashboard') {
+                switchEntryMethod('dashboard');
+            }
+            
+            // Add post to the selected platform (this creates it in editing mode)
+            addPost(platform);
+            
+            // Get the last added post and populate it
+            const container = document.getElementById(platform + '-posts');
+            const lastPost = container.lastElementChild.previousElementSibling; // Get post before add button
+            
+            if (lastPost && lastPost.classList.contains('post-entry') && extractedData) {
+                lastPost.querySelector('.post-description').value = extractedData.description || 'AI extracted post';
+                
+                // Set the post type if available
+                const typeSelect = lastPost.querySelector('.post-type');
+                if (extractedData.postType && typeSelect) {
+                    // Map common types to our dropdown options
+                    const typeMap = {
+                        'reel': 'Reel',
+                        'post': 'Post', 
+                        'story': 'Story',
+                        'carousel': 'Carousel',
+                        'video': 'Video',
+                        'pin': 'Pin',
+                        'tweet': 'Tweet'
+                    };
+                    const mappedType = typeMap[extractedData.postType.toLowerCase()] || extractedData.postType;
+                    
+                    // Find matching option
+                    for (let option of typeSelect.options) {
+                        if (option.value.toLowerCase() === mappedType.toLowerCase()) {
+                            option.selected = true;
+                            break;
+                        }
+                    }
+                    
+                    // If no match found, use "Other"
+                    if (typeSelect.value === '') {
+                        typeSelect.value = 'Other';
+                    }
+                }
+                
+                lastPost.querySelector('.post-views').value = extractedData.views || '';
+                lastPost.querySelector('.post-likes').value = extractedData.likes || '';
+                lastPost.querySelector('.post-comments').value = extractedData.comments || '';
+                lastPost.querySelector('.post-shares').value = extractedData.shares || '';
+                lastPost.querySelector('.post-new-followers').value = extractedData.newFollowers || ''; // NEW
+                
+                // Calculate engagement rate and update followers display if we have views
+                if (extractedData.views > 0) {
+                    calculateEngagement(lastPost.querySelector('.post-views'));
+                }
+                
+                // Update followers display
+                const followersInput = lastPost.querySelector('.post-new-followers');
+                if (followersInput) {
+                    updateFollowersDisplay(followersInput);
+                }
+                
+                // Save the post immediately after adding AI data
+                savePost(platform, lastPost.dataset.postId);
+                
+                alert(`✅ Data added to ${platform.charAt(0).toUpperCase() + platform.slice(1)} dashboard and saved!`);
+                
+                // Optionally hide the analysis result after adding
+                resultDiv.style.opacity = '0.6';
+                const addButton = resultDiv.querySelector('button');
+                addButton.textContent = 'Added ✓';
+                addButton.disabled = true;
+            }
+        }
+
+        // Enhanced analyze screenshot function with followers data extraction
+        async function analyzeScreenshot(file, index) {
+            const resultsContainer = document.getElementById('analysisResults');
+            
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'analysis-result';
+            resultDiv.innerHTML = `
+                <div class="analysis-header">
+                    <h4>📱 ${file.name}</h4>
+                    <div class="loading-spinner"></div>
+                </div>
+                <img class="screenshot-preview" src="${URL.createObjectURL(file)}" alt="Screenshot preview">
+                <div class="status">Analyzing with AI...</div>
+                <div class="extracted-data-grid" id="data-${index}"></div>
+                <div class="actions" id="actions-${index}" style="display: none;">
+                    <select id="platform-${index}" style="margin-right: 10px;">
+                        <option value="instagram">Instagram</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="threads">Threads</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="pinterest">Pinterest</option>
+                    </select>
+                    <button onclick="addExtractedDataToTracker(${index})" style="background: #38a169;">Add to Dashboard</button>
+                </div>
+            `;
+            resultsContainer.appendChild(resultDiv);
+            
+            try {
+                const base64Image = await fileToBase64(file);
+                const extractedData = await callOpenAIVision(base64Image);
+                
+                const statusDiv = resultDiv.querySelector('.status');
+                const loadingSpinner = resultDiv.querySelector('.loading-spinner');
+                const dataGrid = document.getElementById(`data-${index}`);
+                const actions = document.getElementById(`actions-${index}`);
+                
+                loadingSpinner.style.display = 'none';
+                statusDiv.innerHTML = '<div class="success-message">✅ Analysis complete!</div>';
+                
+                if (extractedData.success) {
+                    dataGrid.innerHTML = `
+                        <div class="data-field">
+                            <div class="data-label">Post Type</div>
+                            <div class="data-value">${extractedData.data.postType || 'Unknown'}</div>
+                        </div>
+                        <div class="data-field">
+                            <div class="data-label">Views</div>
+                            <div class="data-value">${extractedData.data.views || 0}</div>
+                        </div>
+                        <div class="data-field">
+                            <div class="data-label">Likes</div>
+                            <div class="data-value">${extractedData.data.likes || 0}</div>
+                        </div>
+                        <div class="data-field">
+                            <div class="data-label">Comments</div>
+                            <div class="data-value">${extractedData.data.comments || 0}</div>
+                        </div>
+                        <div class="data-field">
+                            <div class="data-label">Shares</div>
+                            <div class="data-value">${extractedData.data.shares || 0}</div>
+                        </div>
+                        <div class="data-field">
+                            <div class="data-label">New Followers</div>
+                            <div class="data-value ${extractedData.data.newFollowers > 0 ? 'positive' : extractedData.data.newFollowers < 0 ? 'negative' : 'zero'}">${extractedData.data.newFollowers > 0 ? '+' : ''}${extractedData.data.newFollowers || 0}</div>
+                        </div>
+                        <div class="data-field">
+                            <div class="data-label">Engagement Rate</div>
+                            <div class="data-value">${extractedData.data.engagementRate || 'Auto-calc'}</div>
+                        </div>
+                    `;
+                    
+                    resultDiv.dataset.extractedData = JSON.stringify(extractedData.data);
+                    
+                    if (extractedData.data.platform) {
+                        document.getElementById(`platform-${index}`).value = extractedData.data.platform.toLowerCase();
+                    }
+                    
+                    actions.style.display = 'block';
+                } else {
+                    statusDiv.innerHTML = '<div class="error-message">⚠ Could not extract data. Please try a clearer screenshot or enter manually.</div>';
+                    dataGrid.innerHTML = '<p style="color: #718096; text-align: center;">No data extracted</p>';
+                }
+                
+            } catch (error) {
+                console.error('Analysis error:', error);
+                const statusDiv = resultDiv.querySelector('.status');
+                const loadingSpinner = resultDiv.querySelector('.loading-spinner');
+                
+                loadingSpinner.style.display = 'none';
+                
+                if (error.message.includes('401')) {
+                    statusDiv.innerHTML = '<div class="error-message">⚠ Invalid API key. Please check your OpenAI API key.</div>';
+                } else if (error.message.includes('429')) {
+                    statusDiv.innerHTML = '<div class="error-message">⚠ API rate limit exceeded. Please wait a moment and try again.</div>';
+                } else if (error.message.includes('insufficient_quota')) {
+                    statusDiv.innerHTML = '<div class="error-message">⚠ Insufficient OpenAI credits. Please add credits to your account.</div>';
+                } else {
+                    statusDiv.innerHTML = '<div class="error-message">⚠ Analysis failed. Please try again or enter data manually.</div>';
+                }
+            }
+        }
+
+        // API Key Management Functions - FIXED to auto-detect existing keys
+        function validateApiKey() {
+            const apiKeyInput = document.getElementById('openaiApiKey');
+            const saveBtn = document.getElementById('saveApiKeyBtn');
+            const clearBtn = document.getElementById('clearApiKeyBtn');
+            
+            const apiKey = apiKeyInput.value.trim();
+            const isValid = apiKey.startsWith('sk-') && apiKey.length > 20;
+            
+            saveBtn.disabled = !isValid;
+            clearBtn.disabled = !(userApiKey || apiKey);
+            
+            // If there's a valid API key in the input and it's not already saved, automatically enable upload
+            if (isValid && !userApiKey) {
+                userApiKey = apiKey;
+                document.getElementById('apiKeyStatus').classList.remove('hidden');
+                document.getElementById('uploadSection').classList.remove('hidden');
+                
+                apiKeyInput.placeholder = 'API Key saved ✅';
+                apiKeyInput.style.backgroundColor = '#f0fff4';
+                apiKeyInput.style.borderColor = '#48bb78';
+                saveBtn.disabled = true;
+                clearBtn.disabled = false;
+            }
+        }
+        
+        function saveApiKey() {
+            const apiKeyInput = document.getElementById('openaiApiKey');
+            const apiKey = apiKeyInput.value.trim();
+            
+            if (!apiKey.startsWith('sk-') || apiKey.length < 20) {
+                alert('Please enter a valid OpenAI API key (starts with sk-)');
+                return;
+            }
+            
+            userApiKey = apiKey;
+            console.log('API Key stored:', userApiKey ? 'Yes' : 'No');
+            
+            document.getElementById('apiKeyStatus').classList.remove('hidden');
+            document.getElementById('uploadSection').classList.remove('hidden');
+            
+            apiKeyInput.placeholder = 'API Key saved ✅';
+            apiKeyInput.style.backgroundColor = '#f0fff4';
+            apiKeyInput.style.borderColor = '#48bb78';
+            
+            document.getElementById('saveApiKeyBtn').disabled = true;
+            document.getElementById('clearApiKeyBtn').disabled = false;
+            
+            alert('✅ API Key saved! You can now upload screenshots for analysis.');
+        }
+        
+        function clearApiKey() {
+            userApiKey = null;
+            console.log('API Key cleared');
+            
+            document.getElementById('apiKeyStatus').classList.add('hidden');
+            document.getElementById('uploadSection').classList.add('hidden');
+            document.getElementById('analysisResults').innerHTML = '';
+            
+            const apiKeyInput = document.getElementById('openaiApiKey');
+            apiKeyInput.value = '';
+            apiKeyInput.placeholder = 'sk-proj-...';
+            apiKeyInput.style.backgroundColor = '';
+            apiKeyInput.style.borderColor = '';
+            
+            document.getElementById('saveApiKeyBtn').disabled = true;
+            document.getElementById('clearApiKeyBtn').disabled = true;
+            
+            alert('API Key cleared. Screenshots analysis is now disabled.');
+        }
+        
+        function checkApiKeyStatus() {
+            console.log('Checking API key status:', userApiKey ? 'Key exists' : 'No key');
+            
+            if (userApiKey) {
+                document.getElementById('apiKeyStatus').classList.remove('hidden');
+                document.getElementById('uploadSection').classList.remove('hidden');
+                document.getElementById('clearApiKeyBtn').disabled = false;
+                document.getElementById('saveApiKeyBtn').disabled = true;
+                
+                const apiKeyInput = document.getElementById('openaiApiKey');
+                apiKeyInput.placeholder = 'API Key saved ✅';
+                apiKeyInput.style.backgroundColor = '#f0fff4';
+                apiKeyInput.style.borderColor = '#48bb78';
+            } else {
+                document.getElementById('apiKeyStatus').classList.add('hidden');
+                document.getElementById('uploadSection').classList.add('hidden');
+                document.getElementById('saveApiKeyBtn').disabled = true;
+                document.getElementById('clearApiKeyBtn').disabled = true;
+            }
+        }
+
+        // AI Screenshot Analysis Functions
+        async function analyzeScreenshots(event) {
+            if (!userApiKey) {
+                alert('Please enter your OpenAI API key first to use screenshot analysis.');
+                return;
+            }
+            
+            const files = event.target.files;
+            const resultsContainer = document.getElementById('analysisResults');
+            
+            if (files.length === 0) return;
+            
+            resultsContainer.innerHTML = '<h3>🤖 Analyzing Screenshots...</h3>';
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                await analyzeScreenshot(file, i);
+            }
+        }
+
+        // Account Management Functions - ENHANCED with immediate theme application
+        function switchAccount() {
+            const selectedAccountId = document.getElementById('currentAccountSelect').value;
+            if (selectedAccountId !== currentAccountId) {
+                currentAccountId = selectedAccountId;
+                updateCurrentAccountDisplay();
+                
+                // Apply theme immediately when switching accounts
+                applyAccountTheme();
+                
+                loadUserData(); // Reload data for the new account
+            }
+        }
+        
+        function updateCurrentAccountDisplay() {
+            const account = userAccounts[currentAccountId];
+            document.getElementById('currentAccountName').textContent = account.name;
+            document.getElementById('currentAccountDescription').textContent = account.description || '';
+        }
+        
+        // NEW: Function to apply account theme colors
+        function applyAccountTheme() {
+            const account = userAccounts[currentAccountId];
+            const color = account.color || '#667eea';
+            
+            // Convert hex to HSL for lighter variants
+            const lighterColor = lightenColor(color, 0.9);
+            const darkerColor = darkenColor(color, 0.1);
+            
+            // Update CSS custom properties
+            document.documentElement.style.setProperty('--account-color', color);
+            document.documentElement.style.setProperty('--account-color-light', lighterColor);
+            document.documentElement.style.setProperty('--account-color-dark', darkerColor);
+            
+            console.log('Applied theme:', color, 'for account:', account.name);
+        }
+        
+        // Helper function to lighten a color
+        function lightenColor(color, amount) {
+            const num = parseInt(color.slice(1), 16);
+            const amt = Math.round(255 * amount);
+            const R = (num >> 16) + amt;
+            const G = (num >> 8 & 0x00FF) + amt;
+            const B = (num & 0x0000FF) + amt;
+            return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+        }
+        
+        // Helper function to darken a color
+        function darkenColor(color, amount) {
+            const num = parseInt(color.slice(1), 16);
+            const amt = Math.round(255 * amount);
+            const R = (num >> 16) - amt;
+            const G = (num >> 8 & 0x00FF) - amt;
+            const B = (num & 0x0000FF) - amt;
+            return '#' + (0x1000000 + (R > 255 ? 255 : R < 0 ? 0 : R) * 0x10000 +
+                (G > 255 ? 255 : G < 0 ? 0 : G) * 0x100 +
+                (B > 255 ? 255 : B < 0 ? 0 : B)).toString(16).slice(1);
+        }
+        
+        function showCreateAccountModal() {
+            editingAccountId = null;
+            document.getElementById('modalTitle').textContent = 'Create New Account';
+            document.getElementById('accountName').value = '';
+            document.getElementById('accountDescription').value = '';
+            document.getElementById('accountColor').value = '#667eea';
+            document.getElementById('saveAccountBtn').textContent = 'Create Account';
+            document.getElementById('accountModal').classList.remove('hidden');
+            document.getElementById('accountModal').style.display = 'block';
+        }
+        
+        function showManageAccountsModal() {
+            populateAccountsList();
+            document.getElementById('manageModal').classList.remove('hidden');
+            document.getElementById('manageModal').style.display = 'block';
+        }
+        
+        function closeAccountModal() {
+            document.getElementById('accountModal').classList.add('hidden');
+            document.getElementById('accountModal').style.display = 'none';
+            editingAccountId = null;
+        }
+        
+        function closeManageModal() {
+            document.getElementById('manageModal').classList.add('hidden');
+            document.getElementById('manageModal').style.display = 'none';
+        }
+        
+        async function saveAccount() {
+            const name = document.getElementById('accountName').value.trim();
+            const description = document.getElementById('accountDescription').value.trim();
+            const color = document.getElementById('accountColor').value;
+            
+            if (!name) {
+                alert('Please enter an account name');
+                return;
+            }
+            
+            if (editingAccountId) {
+                // Editing existing account
+                userAccounts[editingAccountId].name = name;
+                userAccounts[editingAccountId].description = description;
+                userAccounts[editingAccountId].color = color;
+            } else {
+                // Creating new account
+                const accountId = 'account_' + Date.now();
+                userAccounts[accountId] = {
+                    id: accountId,
+                    name: name,
+                    description: description,
+                    color: color,
+                    createdAt: new Date().toISOString()
+                };
+                
+                // Switch to the new account
+                currentAccountId = accountId;
+            }
+            
+            // Update the dropdown and display
+            populateAccountsDropdown();
+            updateCurrentAccountDisplay();
+            
+            // Apply the theme immediately (critical fix)
+            applyAccountTheme();
+            
+            // Save to Firebase
+            if (currentUser && !initializationError) {
+                await saveUserAccounts();
+            }
+            
+            closeAccountModal();
+            alert(editingAccountId ? 'Account updated successfully!' : 'Account created successfully!');
+        }
+        
+        function editAccount(accountId) {
+            if (accountId === 'default') return; // Can't edit default account
+            
+            editingAccountId = accountId;
+            const account = userAccounts[accountId];
+            
+            document.getElementById('modalTitle').textContent = 'Edit Account';
+            document.getElementById('accountName').value = account.name;
+            document.getElementById('accountDescription').value = account.description || '';
+            document.getElementById('accountColor').value = account.color;
+            document.getElementById('saveAccountBtn').textContent = 'Update Account';
+            document.getElementById('accountModal').classList.remove('hidden');
+            document.getElementById('accountModal').style.display = 'block';
+        }
+        
+        async function deleteAccount(accountId) {
+            if (accountId === 'default') {
+                alert('Cannot delete the default account');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to delete "${userAccounts[accountId].name}"? This will also delete all data associated with this account.`)) {
+                return;
+            }
+            
+            // If deleting current account, switch to default
+            if (currentAccountId === accountId) {
+                currentAccountId = 'default';
+                updateCurrentAccountDisplay();
+                applyAccountTheme(); // Apply default theme
+            }
+            
+            // Delete from accounts list
+            delete userAccounts[accountId];
+            
+            // Update dropdown
+            populateAccountsDropdown();
+            populateAccountsList();
+            
+            // Delete account data from Firebase
+            if (currentUser && !initializationError) {
+                try {
+                    // Delete all date ranges for this account
+                    const accountRef = collection(db, 'users', currentUser.uid, 'accounts', accountId, 'dateRanges');
+                    const snapshot = await getDocs(accountRef);
+                    const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+                    await Promise.all(deletePromises);
+                    
+                    // Delete the account document
+                    await deleteDoc(doc(db, 'users', currentUser.uid, 'accounts', accountId));
+                    
+                    await saveUserAccounts();
+                } catch (error) {
+                    console.error('Error deleting account data:', error);
+                }
+            }
+            
+            alert('Account deleted successfully');
+            loadUserData(); // Reload data for current account
+        }
+        
+        function populateAccountsDropdown() {
+            const dropdown = document.getElementById('currentAccountSelect');
+            dropdown.innerHTML = '';
+            
+            Object.values(userAccounts).forEach(account => {
+                const option = document.createElement('option');
+                option.value = account.id;
+                option.textContent = account.name;
+                if (account.id === currentAccountId) {
+                    option.selected = true;
+                }
+                dropdown.appendChild(option);
+            });
+        }
+        
+        function populateAccountsList() {
+            const container = document.getElementById('accountsList');
+            container.innerHTML = '';
+            
+            Object.values(userAccounts).forEach(account => {
+                const accountDiv = document.createElement('div');
+                accountDiv.className = `account-item ${account.id === currentAccountId ? 'current-account' : ''}`;
+                accountDiv.innerHTML = `
+                    <div class="account-info">
+                        <h4>${account.name} ${account.id === currentAccountId ? '(Current)' : ''}</h4>
+                        <p>${account.description || 'No description'}</p>
+                        <div style="width: 20px; height: 20px; background: ${account.color}; border-radius: 50%; margin-top: 5px;"></div>
+                    </div>
+                    <div class="account-actions">
+                        ${account.id !== 'default' ? `
+                            <button onclick="editAccount('${account.id}')" style="background: #3182ce;">Edit</button>
+                            <button onclick="deleteAccount('${account.id}')" style="background: #e53e3e;">Delete</button>
+                        ` : '<span style="color: #718096; font-size: 12px;">Default account</span>'}
+                    </div>
+                `;
+                container.appendChild(accountDiv);
+            });
+        }
+        
+        async function saveUserAccounts() {
+            if (!currentUser || initializationError) return;
+            
+            try {
+                const accountsRef = doc(db, 'users', currentUser.uid, 'settings', 'accounts');
+                await setDoc(accountsRef, {
+                    accounts: userAccounts,
+                    currentAccountId: currentAccountId,
+                    lastUpdated: new Date().toISOString()
+                });
+            } catch (error) {
+                console.error('Error saving accounts:', error);
+            }
+        }
+        
+        async function loadUserAccounts() {
+            if (!currentUser || initializationError) return;
+            
+            try {
+                const accountsRef = doc(db, 'users', currentUser.uid, 'settings', 'accounts');
+                const accountsSnap = await getDoc(accountsRef);
+                
+                if (accountsSnap.exists()) {
+                    const data = accountsSnap.data();
+                    userAccounts = data.accounts || userAccounts;
+                    currentAccountId = data.currentAccountId || 'default';
+                }
+                
+                populateAccountsDropdown();
+                updateCurrentAccountDisplay();
+                applyAccountTheme(); // Apply the loaded theme
+            } catch (error) {
+                console.error('Error loading accounts:', error);
+            }
+        }
+
     </script>
 </body>
 </html>
